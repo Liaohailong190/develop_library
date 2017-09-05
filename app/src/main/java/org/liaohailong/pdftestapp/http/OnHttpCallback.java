@@ -20,13 +20,12 @@ import java.util.List;
 
 public abstract class OnHttpCallback<T> {
 
-
     public void setResponse(int code, String data) {
         if (code == HttpURLConnection.HTTP_OK) {
             T rawData = getRawData(data);
             onSuccess(rawData);
         } else {
-            onFail(code, data);
+            onFailure(code, data);
         }
     }
 
@@ -71,11 +70,11 @@ public abstract class OnHttpCallback<T> {
 
     }
 
-    protected String getResultListKey() {
+    private String getResultListKey() {
         return "list";
     }
 
     public abstract void onSuccess(T result);
 
-    public abstract void onFail(int code, String info);
+    public abstract void onFailure(int code, String info);
 }

@@ -8,7 +8,7 @@ import android.widget.Toast;
 
 import com.google.gson.JsonObject;
 
-import org.liaohailong.pdftestapp.announce.OnClickListener;
+import org.liaohailong.pdftestapp.announce.BindOnClick;
 import org.liaohailong.pdftestapp.announce.FindViewById;
 import org.liaohailong.pdftestapp.http.HttpUtils;
 import org.liaohailong.pdftestapp.http.OnHttpCallback;
@@ -31,7 +31,7 @@ public class MainActivity extends BaseActivity implements View.OnClickListener {
         setContentView(R.layout.activity_click);
     }
 
-    @OnClickListener({R.id.btn_01, R.id.btn_02, R.id.btn_03, R.id.btn_04})
+    @BindOnClick({R.id.btn_01, R.id.btn_02, R.id.btn_03, R.id.btn_04})
     @Override
     public void onClick(View v) {
         String toast = "";
@@ -57,7 +57,7 @@ public class MainActivity extends BaseActivity implements View.OnClickListener {
                     }
 
                     @Override
-                    public void onFail(int code, String info) {
+                    public void onFailure(int code, String info) {
 
                     }
                 });
