@@ -1,85 +1,72 @@
 package org.liaohailong.pdftestapp;
 
-import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
-import android.view.KeyEvent;
+import android.support.annotation.Nullable;
 import android.view.View;
+import android.widget.TextView;
+import android.widget.Toast;
 
-import com.github.barteksc.pdfviewer.PDFView;
-import com.github.barteksc.pdfviewer.listener.OnPageChangeListener;
+import com.google.gson.JsonObject;
 
+import org.liaohailong.pdftestapp.announce.OnClickListener;
+import org.liaohailong.pdftestapp.announce.FindViewById;
+import org.liaohailong.pdftestapp.http.HttpUtils;
+import org.liaohailong.pdftestapp.http.OnHttpCallback;
 
-public class MainActivity extends AppCompatActivity implements OnPageChangeListener, View.OnClickListener {
-    private PDFView pdfView;
+import java.util.HashMap;
+import java.util.Map;
 
-    private int currentPage = 1;
-    private int totalCount = 1;
+/**
+ * 点击事件测试
+ * Created by LHL on 2017/9/5.
+ */
+
+public class MainActivity extends BaseActivity implements View.OnClickListener {
+    @FindViewById(R.id.toast_text)
+    private TextView textView;
 
     @Override
-    protected void onCreate(Bundle savedInstanceState) {
+    protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
-        View upBtn = findViewById(R.id.up_btn);
-        View downBtn = findViewById(R.id.down_btn);
-        upBtn.setOnClickListener(this);
-        downBtn.setOnClickListener(this);
-        pdfView = (PDFView) findViewById(R.id.pdf_view);
-        pdfView.fromAsset("sample02.pdf")
-                .swipeHorizontal(false)
-                .defaultPage(1)
-                .enableDoubletap(true)
-                .enableSwipe(true)
-                .onPageChange(this)
-                .load();
+        setContentView(R.layout.activity_click);
     }
 
-
-    @Override
-    public void onPageChanged(int page, int pageCount) {
-        currentPage = page;
-        totalCount = pageCount;
-    }
-
-    @Override
-    public boolean onKeyUp(int keyCode, KeyEvent event) {
-        switch (keyCode) {
-            case KeyEvent.KEYCODE_DPAD_UP:
-                turnPrePage();
-                break;
-            case KeyEvent.KEYCODE_DPAD_DOWN:
-                turnNextPage();
-                break;
-        }
-        return true;
-    }
-
+    @OnClickListener({R.id.btn_01, R.id.btn_02, R.id.btn_03, R.id.btn_04})
     @Override
     public void onClick(View v) {
+        String toast = "";
         switch (v.getId()) {
-            case R.id.up_btn://向上
-                turnPrePage();
+            case R.id.btn_01:
+                toast = "toast 01";
                 break;
-            case R.id.down_btn://向下
-                turnNextPage();
+            case R.id.btn_02:
+                toast = "toast 02";
+                break;
+            case R.id.btn_03:
+                toast = "toast 03";
+                break;
+            case R.id.btn_04:
+                toast = "请求网络";
+                String url = "http://z.hidajian.com/api/charts/wall_data";
+                Map<String, String> params = new HashMap<>();
+                params.put("wall", "1529");
+                HttpUtils.post(url, params, new OnHttpCallback<JsonObject>() {
+                    @Override
+                    public void onSuccess(JsonObject result) {
+                        Toast.makeText(getApplicationContext(), result.toString(), Toast.LENGTH_LONG).show();
+                    }
+
+                    @Override
+                    public void onFail(int code, String info) {
+
+                    }
+                });
+
                 break;
         }
-    }
-
-    private void turnNextPage() {
-        int upPage;
-        upPage = ++currentPage;
-        if (upPage > totalCount) {
-            upPage = totalCount;
+        Toast.makeText(this, toast, Toast.LENGTH_LONG).show();
+        if (textView != null) {
+            textView.setText(toast);
         }
-        pdfView.jumpTo(upPage);
-    }
-
-    private void turnPrePage() {
-        int upPage;
-        upPage = --currentPage;
-        if (upPage < 1) {
-            upPage = 1;
-        }
-        pdfView.jumpTo(upPage);
     }
 }
