@@ -1,0 +1,18 @@
+[
+    {
+        "merged": "D:\\liao\\workspace02\\PdfTestApp\\android-pdf-viewer\\build\\intermediates\\res\\merged\\release\\drawable\\default_scroll_handle_top.xml",
+        "source": "D:\\liao\\workspace02\\PdfTestApp\\android-pdf-viewer\\src\\main\\res\\drawable\\default_scroll_handle_top.xml"
+    },
+    {
+        "merged": "D:\\liao\\workspace02\\PdfTestApp\\android-pdf-viewer\\build\\intermediates\\res\\merged\\release\\drawable\\default_scroll_handle_right.xml",
+        "source": "D:\\liao\\workspace02\\PdfTestApp\\android-pdf-viewer\\src\\main\\res\\drawable\\default_scroll_handle_right.xml"
+    },
+    {
+        "merged": "D:\\liao\\workspace02\\PdfTestApp\\android-pdf-viewer\\build\\intermediates\\res\\merged\\release\\drawable\\default_scroll_handle_left.xml",
+        "source": "D:\\liao\\workspace02\\PdfTestApp\\android-pdf-viewer\\src\\main\\res\\drawable\\default_scroll_handle_left.xml"
+    },
+    {
+        "merged": "D:\\liao\\workspace02\\PdfTestApp\\android-pdf-viewer\\build\\intermediates\\res\\merged\\release\\drawable\\default_scroll_handle_bottom.xml",
+        "source": "D:\\liao\\workspace02\\PdfTestApp\\android-pdf-viewer\\src\\main\\res\\drawable\\default_scroll_handle_bottom.xml"
+    }
+]
