@@ -7,7 +7,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.view.View;
 import android.view.ViewGroup;
 
-import org.liaohailong.pdftestapp.announce.OnClickListener;
+import org.liaohailong.pdftestapp.announce.BindOnClick;
 import org.liaohailong.pdftestapp.announce.FindViewById;
 
 import java.lang.reflect.Field;
@@ -53,8 +53,8 @@ public class BaseActivity extends AppCompatActivity {
         while (aClass != Object.class) {
             Method[] declaredMethods = aClass.getDeclaredMethods();
             for (Method declaredMethod : declaredMethods) {
-                if (declaredMethod.isAnnotationPresent(OnClickListener.class)) {
-                    OnClickListener annotation = declaredMethod.getAnnotation(OnClickListener.class);
+                if (declaredMethod.isAnnotationPresent(BindOnClick.class)) {
+                    BindOnClick annotation = declaredMethod.getAnnotation(BindOnClick.class);
                     int[] value = annotation.value();
                     for (int id : value) {
                         View view = findViewById(id);
