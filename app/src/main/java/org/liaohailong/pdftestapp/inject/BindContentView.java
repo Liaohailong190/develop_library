@@ -1,4 +1,4 @@
-package org.liaohailong.pdftestapp.announce;
+package org.liaohailong.pdftestapp.inject;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
@@ -6,11 +6,11 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * 简化findViewById
- * Created by LHL on 2017/9/5.
+ * 绑定内容视图
+ * Created by LHL on 2017/9/6.
  */
+@Target(ElementType.TYPE)
 @Retention(RetentionPolicy.RUNTIME)
-@Target(ElementType.FIELD)
-public @interface FindViewById {
+public @interface BindContentView {
     int value();
 }

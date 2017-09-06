@@ -1,19 +1,16 @@
-package org.liaohailong.pdftestapp.announce;
+package org.liaohailong.pdftestapp.inject;
 
-
-import java.lang.annotation.Documented;
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * 绑定点击事件的注解接口
+ * 简化findViewById
  * Created by LHL on 2017/9/5.
  */
-@Documented
-@Target(ElementType.METHOD)
 @Retention(RetentionPolicy.RUNTIME)
-public @interface BindOnClick {
-    int[] value();
+@Target(ElementType.FIELD)
+public @interface FindViewById {
+    int value();
 }
