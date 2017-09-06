@@ -7,6 +7,7 @@ import android.widget.Toast;
 import org.liaohailong.pdftestapp.inject.BindContentView;
 import org.liaohailong.pdftestapp.inject.BindOnClick;
 import org.liaohailong.pdftestapp.inject.FindViewById;
+import org.liaohailong.pdftestapp.inject.SaveState;
 
 /**
  * 测试的fragment
@@ -17,6 +18,7 @@ public class MainFragment extends BaseFragment implements View.OnClickListener {
     @FindViewById(R.id.text_fragment)
     private TextView textView;
 
+    @SaveState
     private int count = 0;
     private static final String TEXT = "我被点击了!!";
 
