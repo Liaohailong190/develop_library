@@ -12,7 +12,11 @@ import android.view.ViewGroup;
 import org.liaohailong.pdftestapp.util.BundleUtil;
 
 import java.lang.reflect.Field;
+import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
+import java.lang.reflect.Proxy;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * 注解使用类
@@ -22,6 +26,7 @@ import java.lang.reflect.Method;
 
 public class Victor {
     private static final String METHOD_SET_ONCLICK_LISTENER = "setOnClickListener";
+    private static final String METHOD_ON_CLICK = "onClick";
 
     private Victor() {
 
@@ -67,18 +72,25 @@ public class Victor {
         Class aClass = owner.getClass();
         while (aClass != Object.class) {
             Method[] declaredMethods = aClass.getDeclaredMethods();
-            for (Method declaredMethod : declaredMethods) {
-                if (declaredMethod.isAnnotationPresent(BindOnClick.class)) {
-                    BindOnClick annotation = declaredMethod.getAnnotation(BindOnClick.class);
+            for (Method method : declaredMethods) {
+                if (method.isAnnotationPresent(BindOnClick.class)) {
+                    BindOnClick annotation = method.getAnnotation(BindOnClick.class);
                     int[] value = annotation.value();
                     for (int id : value) {
                         View view = finder.findViewById(id);
-                        if (view != null && owner instanceof View.OnClickListener) {
+                        if (view != null) {
                             Class viewClass = view.getClass();
                             try {
                                 Method setOnClickListener = getMethod(viewClass, METHOD_SET_ONCLICK_LISTENER, new Class[]{View.OnClickListener.class});
+                                //拦截方法
+                                InjectInvocationHandler handler = new InjectInvocationHandler(owner);
+                                //添加到拦截列表
+                                handler.add(METHOD_ON_CLICK, method);
+                                //得到监听的代理对象
+                                Proxy proxy = (Proxy) Proxy.newProxyInstance(View.OnClickListener.class.getClassLoader(),
+                                        new Class[]{View.OnClickListener.class}, handler);
                                 if (setOnClickListener != null) {
-                                    setOnClickListener.invoke(view, owner);
+                                    setOnClickListener.invoke(view, proxy);
                                 }
                             } catch (Exception e) {
                                 e.printStackTrace();
@@ -238,6 +250,38 @@ public class Victor {
 
         private Object getOwner() {
             return fieldOwner;
+        }
+
+    }
+
+    private static class InjectInvocationHandler implements InvocationHandler {
+        //拦截的方法名列表
+        private Map<String, Method> map = new HashMap<>();
+        //方法拥有者
+        private Object target;
+
+        private InjectInvocationHandler(Object target) {
+            this.target = target;
+        }
+
+        @Override
+        public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
+            if (target != null) {
+                //获取方法名
+                String name = method.getName();
+                Method m = map.get(name);
+                if (m != null) {//如果不存在与拦截列表，就执行
+                    return m.invoke(target, args);
+                }
+            }
+            return null;
+        }
+
+        /**
+         * 向拦截列表里添加拦截的方法
+         */
+        private void add(String name, Method method) {
+            map.put(name, method);
         }
 
     }

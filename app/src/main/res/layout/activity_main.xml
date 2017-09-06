@@ -22,6 +22,14 @@
             android:gravity="center"
             android:text="弹弹弹二号" />
 
+        <Button
+            android:id="@+id/btn_03"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center"
+            android:text="点我变色" />
+
+
         <TextView
             android:id="@+id/toast_text"
             android:layout_width="match_parent"

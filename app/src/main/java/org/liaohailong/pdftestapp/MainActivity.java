@@ -1,5 +1,6 @@
 package org.liaohailong.pdftestapp;
 
+import android.graphics.Color;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.FragmentManager;
@@ -18,15 +19,21 @@ import org.liaohailong.pdftestapp.http.OnHttpCallback;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Random;
 
 /**
  * 点击事件测试
  * Created by LHL on 2017/9/5.
  */
 @BindContentView(R.layout.activity_main)
-public class MainActivity extends BaseActivity implements View.OnClickListener {
+public class MainActivity extends BaseActivity {
+    private static int[] COLORS = new int[]{Color.RED, Color.GREEN, Color.BLUE};
+
     @FindViewById(R.id.toast_text)
     private TextView textView;
+
+    //辅助类相关
+    private Random random = new Random();
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -43,8 +50,7 @@ public class MainActivity extends BaseActivity implements View.OnClickListener {
     }
 
     @BindOnClick({R.id.btn_01, R.id.btn_02})
-    @Override
-    public void onClick(View v) {
+    public void showToast(View v) {
         String toast = "";
         switch (v.getId()) {
             case R.id.btn_01:
@@ -59,4 +65,11 @@ public class MainActivity extends BaseActivity implements View.OnClickListener {
             textView.setText(toast);
         }
     }
+
+    @BindOnClick(R.id.btn_03)
+    public void changeColor(View view) {
+        int i = random.nextInt(COLORS.length);
+        textView.setTextColor(COLORS[i]);
+    }
+
 }
