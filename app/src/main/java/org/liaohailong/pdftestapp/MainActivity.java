@@ -9,10 +9,9 @@ import android.view.View;
 import android.widget.TextView;
 import android.widget.Toast;
 
-
-import org.liaohailong.pdftestapp.inject.BindContentView;
-import org.liaohailong.pdftestapp.inject.BindOnClick;
-import org.liaohailong.pdftestapp.inject.FindViewById;
+import org.liaohailong.library.inject.BindContentView;
+import org.liaohailong.library.inject.BindOnClick;
+import org.liaohailong.library.inject.FindViewById;
 
 import java.util.Random;
 
