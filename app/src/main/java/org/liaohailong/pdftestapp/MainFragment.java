@@ -17,15 +17,17 @@ public class MainFragment extends BaseFragment implements View.OnClickListener {
     @FindViewById(R.id.text_fragment)
     private TextView textView;
 
+    private int count = 0;
+    private static final String TEXT = "我被点击了!!";
+
 
     @BindOnClick({R.id.text_fragment})
     @Override
     public void onClick(View v) {
         switch (v.getId()) {
             case R.id.text_fragment:
-                TextView txt = (TextView) v;
-                Toast.makeText(getContext(), txt.getText().toString() + " 被点击了!!", Toast.LENGTH_LONG).show();
-                textView.setText("我被点击了！！");
+                count++;
+                textView.setText(TEXT + count + "次");
                 break;
         }
     }

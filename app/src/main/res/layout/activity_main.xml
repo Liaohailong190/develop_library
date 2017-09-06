@@ -9,11 +9,18 @@
         android:orientation="vertical">
 
         <Button
-            android:id="@+id/btn_04"
+            android:id="@+id/btn_01"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:gravity="center"
-            android:text="请求网络" />
+            android:text="弹弹弹一号" />
+
+        <Button
+            android:id="@+id/btn_02"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center"
+            android:text="弹弹弹二号" />
 
         <TextView
             android:id="@+id/toast_text"
