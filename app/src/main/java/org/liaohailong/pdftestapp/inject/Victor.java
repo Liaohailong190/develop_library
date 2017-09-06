@@ -3,16 +3,20 @@ package org.liaohailong.pdftestapp.inject;
 import android.app.Activity;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+
+import org.liaohailong.pdftestapp.util.BundleUtil;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 
 /**
  * 注解使用类
+ * Victor是我的英文名字
  * Created by LHL on 2017/9/6.
  */
 
@@ -26,10 +30,11 @@ public class Victor {
     /**
      * 此方法需要放在{@link Activity#onCreate(Bundle)}中调用
      */
-    public static <T extends Activity> void inject(T t) {
+    public static <T extends Activity> void inject(T t, @Nullable Bundle savedInstanceState) {
         checkBindContentViewAnnounce(t);
         checkFindViewByIdAnnounce(t);
-        checkBindOnClickAnnounce(t);
+        checkBindOnClickAnnounce(new ViewFinder(t, t.getWindow().getDecorView()));
+        setSaveState(t, savedInstanceState);
     }
 
     private static <T extends Activity> void checkBindContentViewAnnounce(@NonNull T t) {
@@ -57,8 +62,9 @@ public class Victor {
         }
     }
 
-    private static <T extends Activity> void checkBindOnClickAnnounce(@NonNull T t) {
-        Class aClass = t.getClass();
+    private static void checkBindOnClickAnnounce(ViewFinder finder) {
+        Object owner = finder.getOwner();
+        Class aClass = owner.getClass();
         while (aClass != Object.class) {
             Method[] declaredMethods = aClass.getDeclaredMethods();
             for (Method declaredMethod : declaredMethods) {
@@ -66,13 +72,13 @@ public class Victor {
                     BindOnClick annotation = declaredMethod.getAnnotation(BindOnClick.class);
                     int[] value = annotation.value();
                     for (int id : value) {
-                        View view = t.findViewById(id);
-                        if (view != null && t instanceof View.OnClickListener) {
+                        View view = finder.findViewById(id);
+                        if (view != null && owner instanceof View.OnClickListener) {
                             Class viewClass = view.getClass();
                             try {
                                 Method setOnClickListener = getMethod(viewClass, METHOD_SET_ONCLICK_LISTENER, new Class[]{View.OnClickListener.class});
                                 if (setOnClickListener != null) {
-                                    setOnClickListener.invoke(view, t);
+                                    setOnClickListener.invoke(view, owner);
                                 }
                             } catch (Exception e) {
                                 e.printStackTrace();
@@ -86,14 +92,48 @@ public class Victor {
     }
 
     /**
+     * 恢复带有{@link SaveState}注解的字段
+     */
+    private static void setSaveState(Object fieldOwner, @Nullable Bundle savedInstanceState) {
+        if (savedInstanceState != null) {
+            for (Field field : BundleUtil.getSaveStateFields(fieldOwner)) {
+                try {
+                    SaveState annotation = field.getAnnotation(SaveState.class);
+                    BundleUtil.restoreFromBundle(savedInstanceState, field.toString(), field, fieldOwner, annotation);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+    }
+
+    /**
+     * 保存带有{@link SaveState}注解的字段
+     */
+    public static void getSaveState(Object fieldOwner, Bundle outState) {
+        for (Field field : BundleUtil.getSaveStateFields(fieldOwner)) {
+            SaveState annotation = field.getAnnotation(SaveState.class);
+            if (annotation != null) {
+                try {
+                    BundleUtil.saveToBundle(outState, field.toString(), field, fieldOwner, annotation);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+    }
+
+    /**
      * 此方法需要在{@link Fragment#onCreateView(LayoutInflater, ViewGroup, Bundle)}方法中调用
      * 并且return返回值
      */
-    public static <T extends Fragment> View inject(T t, LayoutInflater inflater, ViewGroup container) {
+
+    public static <T extends Fragment> View inject(T t, LayoutInflater inflater, ViewGroup container, @Nullable Bundle savedInstanceState) {
         View view = checkBindContentViewAnnounce(t, inflater, container);
         if (view != null) {
             checkFindViewByIdAnnounce(t, view);
-            checkBindOnClickAnnounce(t, view);
+            checkBindOnClickAnnounce(new ViewFinder(t, view));
+            setSaveState(t, savedInstanceState);
         }
         return view;
     }
@@ -133,34 +173,6 @@ public class Victor {
                     handlerFindViewById(new ViewFinder(t, view), field);
                 } catch (Exception ex) {
                     ex.printStackTrace();
-                }
-            }
-            aClass = aClass.getSuperclass();
-        }
-    }
-
-    private static <T extends Fragment> void checkBindOnClickAnnounce(@NonNull T t, View container) {
-        Class aClass = t.getClass();
-        while (aClass != Object.class) {
-            Method[] declaredMethods = aClass.getDeclaredMethods();
-            for (Method declaredMethod : declaredMethods) {
-                if (declaredMethod.isAnnotationPresent(BindOnClick.class)) {
-                    BindOnClick annotation = declaredMethod.getAnnotation(BindOnClick.class);
-                    int[] value = annotation.value();
-                    for (int id : value) {
-                        View view = container.findViewById(id);
-                        if (view != null && t instanceof View.OnClickListener) {
-                            Class viewClass = view.getClass();
-                            try {
-                                Method setOnClickListener = getMethod(viewClass, METHOD_SET_ONCLICK_LISTENER, new Class[]{View.OnClickListener.class});
-                                if (setOnClickListener != null) {
-                                    setOnClickListener.invoke(view, t);
-                                }
-                            } catch (Exception e) {
-                                e.printStackTrace();
-                            }
-                        }
-                    }
                 }
             }
             aClass = aClass.getSuperclass();

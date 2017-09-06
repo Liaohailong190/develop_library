@@ -5,7 +5,7 @@ import android.os.Message;
 import android.support.annotation.NonNull;
 import android.text.TextUtils;
 
-import org.liaohailong.pdftestapp.Utility;
+import org.liaohailong.pdftestapp.util.Utility;
 
 import java.io.InputStream;
 import java.io.OutputStreamWriter;

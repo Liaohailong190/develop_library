@@ -19,6 +19,12 @@ public class BaseFragment extends Fragment {
     @Nullable
     @Override
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
-        return Victor.inject(this, inflater, container);
+        return Victor.inject(this, inflater, container, savedInstanceState);
+    }
+
+    @Override
+    public void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+        Victor.getSaveState(this, outState);
     }
 }

@@ -4,7 +4,7 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 
-import org.liaohailong.pdftestapp.Utility;
+import org.liaohailong.pdftestapp.util.Utility;
 import org.liaohailong.pdftestapp.json.JsonInterface;
 import org.liaohailong.pdftestapp.json.JsonUtil;
 
