@@ -2,7 +2,6 @@ package org.liaohailong.pdftestapp;
 
 import android.view.View;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import org.liaohailong.pdftestapp.inject.BindContentView;
 import org.liaohailong.pdftestapp.inject.BindOnClick;

@@ -9,16 +9,11 @@ import android.view.View;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.google.gson.JsonObject;
 
 import org.liaohailong.pdftestapp.inject.BindContentView;
 import org.liaohailong.pdftestapp.inject.BindOnClick;
 import org.liaohailong.pdftestapp.inject.FindViewById;
-import org.liaohailong.pdftestapp.http.HttpUtils;
-import org.liaohailong.pdftestapp.http.OnHttpCallback;
 
-import java.util.HashMap;
-import java.util.Map;
 import java.util.Random;
 
 /**
