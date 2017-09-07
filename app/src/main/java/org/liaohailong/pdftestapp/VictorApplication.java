@@ -11,8 +11,7 @@ import org.liaohailong.pdftestapp.model.Student;
 public class VictorApplication extends RootApplication {
 
     @Override
-    public void onCreate() {
-        super.onCreate();
-        TABLE_CLASSES = new Class[]{Student.class};
+    public Class[] getTableClasses() {
+        return new Class[]{Student.class};
     }
 }

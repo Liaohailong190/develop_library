@@ -18,7 +18,7 @@ import java.util.Map;
 
 
 public class OrmLiteDbHelper extends OrmLiteSqliteOpenHelper {
-    private final Class[] TABLE_CLASSES = RootApplication.TABLE_CLASSES();
+    private final Class[] TABLE_CLASSES = RootApplication.getInstance().getTableClasses();
 
     private static final String TABLE_NAME = RootApplication.DB_NAME();
     private Map<String, Dao> daos = new HashMap<>();
@@ -28,7 +28,7 @@ public class OrmLiteDbHelper extends OrmLiteSqliteOpenHelper {
     }
 
     @Override
-    public void onCreate(SQLiteDatabase database, ConnectionSource connsectionSource) {
+    public void onCreate(SQLiteDatabase database, ConnectionSource connectionSource) {
         try {
             for (int i = 0; i < TABLE_CLASSES.length; i++) {
                 Log.i("ormlite", "create table " + TABLE_CLASSES[i].getName());
@@ -46,7 +46,6 @@ public class OrmLiteDbHelper extends OrmLiteSqliteOpenHelper {
             for (int i = 0; i < TABLE_CLASSES.length; i++) {
                 TableUtils.dropTable(connectionSource, TABLE_CLASSES[i], true);
             }
-
             onCreate(database, connectionSource);
         } catch (SQLException e) {
             e.printStackTrace();

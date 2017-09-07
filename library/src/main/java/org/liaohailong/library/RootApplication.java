@@ -7,10 +7,9 @@ import android.app.Application;
  * Created by LHL on 2017/9/6.
  */
 
-public class RootApplication extends Application {
+public abstract class RootApplication extends Application {
 
     static RootApplication INSTANCE;
-    protected static Class[] TABLE_CLASSES = {};
 
     public static RootApplication getInstance() {
         return INSTANCE;
@@ -32,9 +31,7 @@ public class RootApplication extends Application {
     /**
      * @return 需要建多少表
      */
-    public static Class[] TABLE_CLASSES() {
-        return TABLE_CLASSES;
-    }
+    public abstract Class[] getTableClasses();
 
     @Override
     public void onCreate() {
