@@ -7,8 +7,8 @@ import android.widget.TextView;
 
 import org.liaohailong.library.db.OrmDao;
 import org.liaohailong.library.inject.BindContentView;
-import org.liaohailong.library.inject.BindOnClick;
-import org.liaohailong.library.inject.FindViewById;
+import org.liaohailong.library.inject.OnClick;
+import org.liaohailong.library.inject.BindView;
 import org.liaohailong.library.inject.SaveState;
 import org.liaohailong.pdftestapp.model.Student;
 
@@ -21,7 +21,7 @@ import java.util.List;
  */
 @BindContentView(R.layout.fragment_main)
 public class MainFragment extends BaseFragment implements View.OnClickListener {
-    @FindViewById(R.id.text_fragment)
+    @BindView(R.id.text_fragment)
     private TextView textView;
 
     @SaveState
@@ -39,7 +39,7 @@ public class MainFragment extends BaseFragment implements View.OnClickListener {
         students.clear();
     }
 
-    @BindOnClick({R.id.text_fragment})
+    @OnClick({R.id.text_fragment})
     @Override
     public void onClick(View v) {
         switch (v.getId()) {

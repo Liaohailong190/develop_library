@@ -29,6 +29,13 @@
             android:gravity="center"
             android:text="点我变色" />
 
+        <Button
+            android:id="@+id/btn_04"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center"
+            android:text="按紧我!!加载底部fragment" />
+
 
         <TextView
             android:id="@+id/toast_text"

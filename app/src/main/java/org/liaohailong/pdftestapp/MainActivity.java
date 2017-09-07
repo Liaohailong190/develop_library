@@ -10,8 +10,9 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import org.liaohailong.library.inject.BindContentView;
-import org.liaohailong.library.inject.BindOnClick;
-import org.liaohailong.library.inject.FindViewById;
+import org.liaohailong.library.inject.OnClick;
+import org.liaohailong.library.inject.BindView;
+import org.liaohailong.library.inject.OnLongClick;
 
 import java.util.Random;
 
@@ -23,27 +24,15 @@ import java.util.Random;
 public class MainActivity extends BaseActivity {
     private static int[] COLORS = new int[]{Color.RED, Color.GREEN, Color.BLUE};
 
-    @FindViewById(R.id.toast_text)
+    @BindView(R.id.toast_text)
     private TextView textView;
 
     //辅助类相关
     private Random random = new Random();
+    //数据相关
+    private MainFragment mainFragment;
 
-    @Override
-    protected void onCreate(@Nullable Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        initFragment();
-    }
-
-    private void initFragment() {
-        FragmentManager fm = getSupportFragmentManager();
-        FragmentTransaction ft = fm.beginTransaction();
-        MainFragment mainFragment = new MainFragment();
-        ft.replace(R.id.frame_layout, mainFragment, mainFragment.getClass().getName());
-        ft.commit();
-    }
-
-    @BindOnClick({R.id.btn_01, R.id.btn_02})
+    @OnClick({R.id.btn_01, R.id.btn_02})
     public void showToast(View v) {
         String toast = "";
         switch (v.getId()) {
@@ -60,10 +49,27 @@ public class MainActivity extends BaseActivity {
         }
     }
 
-    @BindOnClick(R.id.btn_03)
+    @OnClick(R.id.btn_03)
     public void changeColor(View view) {
         int i = random.nextInt(COLORS.length);
         textView.setTextColor(COLORS[i]);
+    }
+
+    @OnLongClick(R.id.btn_04)
+    private boolean initFragment(View view) {
+        if (mainFragment != null) {
+            return false;
+        }
+        try {
+            FragmentManager fm = getSupportFragmentManager();
+            FragmentTransaction ft = fm.beginTransaction();
+            mainFragment = new MainFragment();
+            ft.replace(R.id.frame_layout, mainFragment, mainFragment.getClass().getName());
+            ft.commit();
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
+        return true;
     }
 
 }
