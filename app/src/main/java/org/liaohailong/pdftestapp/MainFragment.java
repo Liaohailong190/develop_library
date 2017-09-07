@@ -6,7 +6,7 @@ import android.view.View;
 import android.widget.TextView;
 
 import org.liaohailong.library.async.Cat;
-import org.liaohailong.library.async.Human;
+import org.liaohailong.library.async.Async;
 import org.liaohailong.library.async.Mouse;
 import org.liaohailong.library.async.Schedulers;
 import org.liaohailong.library.db.OrmDao;
@@ -37,7 +37,7 @@ public class MainFragment extends BaseFragment implements View.OnClickListener {
 
     @Override
     public void onViewCreated(View view, @Nullable Bundle savedInstanceState) {
-        new Human<String>()
+        new Async<String>()
                 .watch(new Mouse<String>() {
                     @Override
                     public String run() {

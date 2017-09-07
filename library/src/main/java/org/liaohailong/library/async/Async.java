@@ -15,19 +15,19 @@ import java.util.concurrent.Future;
  * Created by LHL on 2017/9/7.
  */
 
-public class Human<Result> {
+public class Async<Result> {
     private static final ExecutorService EXECUTOR = Executors.newFixedThreadPool(Schedulers.HUMAN_ATTENTION_NUMBER);
-    private static final Handler HANDLER = new HumanHandler();
+    private static final Handler HANDLER = new AsyncHandler();
     private static final Set<Future> TASK = new HashSet<>();
     private Mouse<Result> mouse;
     private Cat<Result> cat;
 
-    public Human<Result> by(Cat<Result> cat) {
+    public Async<Result> by(Cat<Result> cat) {
         this.cat = cat;
         return this;
     }
 
-    public Human<Result> watch(Mouse<Result> mouse) {
+    public Async<Result> watch(Mouse<Result> mouse) {
         this.mouse = mouse;
         return this;
     }
@@ -35,7 +35,7 @@ public class Human<Result> {
     /**
      * @param thread {@link Schedulers}
      */
-    public Human<Result> catOn(int thread) {
+    public Async<Result> catOn(int thread) {
         if (cat != null) {
             cat.setThread(thread);
         }
@@ -45,7 +45,7 @@ public class Human<Result> {
     /**
      * @param thread {@link Schedulers}
      */
-    public Human<Result> mouseOn(int thread) {
+    public Async<Result> mouseOn(int thread) {
         if (mouse != null) {
             mouse.setThread(thread);
         }
@@ -135,7 +135,7 @@ public class Human<Result> {
                         cage.cat.chase(result);
                     } else {
                         Message message = handler.obtainMessage();
-                        message.what = HumanHandler.MOUSE;
+                        message.what = AsyncHandler.MOUSE;
                         message.obj = cage;
                         message.sendToTarget();
                     }
@@ -170,7 +170,7 @@ public class Human<Result> {
         }
     }
 
-    private static class HumanHandler extends Handler {
+    private static class AsyncHandler extends Handler {
         private static final int MOUSE = 0;
 
         @Override
