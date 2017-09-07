@@ -22,7 +22,7 @@ public class Human<Result> {
     private Mouse<Result> mouse;
     private Cat<Result> cat;
 
-    public Human<Result> watch(Cat<Result> cat) {
+    public Human<Result> by(Cat<Result> cat) {
         this.cat = cat;
         return this;
     }
@@ -144,7 +144,11 @@ public class Human<Result> {
                 case CAT_TIME:
                     Cat<Result> cat = cage.cat;
                     Result rawResult = cage.result;
-                    cat.chase(rawResult);
+                    try {
+                        cat.chase(rawResult);
+                    } catch (Exception ex) {
+                        ex.printStackTrace();
+                    }
                     break;
             }
         }
