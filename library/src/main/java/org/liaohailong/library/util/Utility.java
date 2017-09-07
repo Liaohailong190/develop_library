@@ -1,5 +1,6 @@
 package org.liaohailong.library.util;
 
+import android.os.Looper;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.util.Xml;
@@ -28,6 +29,24 @@ public class Utility {
 
     private Utility() {
 
+    }
+
+    /**
+     * 判断当前线程是不是主线程
+     *
+     * @return
+     */
+    public static boolean isMain() {
+        return Looper.getMainLooper().getThread() == Thread.currentThread();
+    }
+
+    /**
+     * 判断当前线程，如果不是主线程则抛出异常
+     */
+    public static void checkMain() {
+        if (!isMain()) {
+            throw new IllegalStateException("Method should must be called in  main thread.");
+        }
     }
 
     /**
