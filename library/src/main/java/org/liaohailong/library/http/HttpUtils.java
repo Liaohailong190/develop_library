@@ -105,8 +105,8 @@ public class HttpUtils {
         }
     }
 
-    private static class HttpTask implements Runnable {
-        private static final int TIME_OUT = 1000 * 15;
+    public static class HttpTask implements Runnable {
+        public static final int TIME_OUT = 1000 * 15;
         private static final String PROTOCOL_HTTP = "http";
         private static final String PROTOCOL_HTTPS = "https";
         private static final char PARAMETER_DELIMITER = '&';

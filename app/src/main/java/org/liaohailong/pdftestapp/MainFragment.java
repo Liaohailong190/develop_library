@@ -3,6 +3,7 @@ package org.liaohailong.pdftestapp;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.view.View;
+import android.widget.ImageView;
 import android.widget.TextView;
 
 import org.liaohailong.library.async.Cat;
@@ -10,6 +11,7 @@ import org.liaohailong.library.async.Async;
 import org.liaohailong.library.async.Mouse;
 import org.liaohailong.library.async.Schedulers;
 import org.liaohailong.library.db.OrmDao;
+import org.liaohailong.library.image.ImageLoader;
 import org.liaohailong.library.inject.BindContentView;
 import org.liaohailong.library.inject.OnClick;
 import org.liaohailong.library.inject.BindView;
@@ -27,9 +29,11 @@ import java.util.List;
  * Created by LHL on 2017/9/6.
  */
 @BindContentView(R.layout.fragment_main)
-public class MainFragment extends BaseFragment implements View.OnClickListener {
+public class MainFragment extends BaseFragment{
     @BindView(R.id.text_fragment)
     private TextView textView;
+    @BindView(R.id.avatar)
+    private ImageView avatar;
 
     @SaveState
     private int count = 0;
@@ -72,8 +76,7 @@ public class MainFragment extends BaseFragment implements View.OnClickListener {
     }
 
     @OnClick({R.id.text_fragment})
-    @Override
-    public void onClick(View v) {
+    public void recordCount(View v) {
         switch (v.getId()) {
             case R.id.text_fragment:
                 count++;
@@ -81,4 +84,9 @@ public class MainFragment extends BaseFragment implements View.OnClickListener {
                 break;
         }
     }
+    @OnClick(R.id.avatar)
+    private void showImage(View view){
+        ImageLoader.getInstance().setImage(avatar,"https://timgsa.baidu.com/timg?image&quality=80&size=b9999_10000&sec=1505054331352&di=67367353f3ac52e7cdaca7221de9c39d&imgtype=0&src=http%3A%2F%2Fimg.mp.itc.cn%2Fupload%2F20161003%2F599d93c935d646b9a1b7e8adb049a8fa_th.jpg");
+    }
+
 }
