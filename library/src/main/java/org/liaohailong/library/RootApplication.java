@@ -3,7 +3,7 @@ package org.liaohailong.library;
 import android.app.Application;
 
 /**
- * 所有APP基类 项目的Application类需要集成此类
+ * 所有APP基类 项目的Application类需要继承此类
  * Created by LHL on 2017/9/6.
  */
 

@@ -1,6 +1,5 @@
 package org.liaohailong.library.image;
 
-import android.Manifest;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.drawable.Drawable;
@@ -28,9 +27,7 @@ import java.io.InputStream;
 import java.io.InterruptedIOException;
 import java.lang.ref.WeakReference;
 import java.net.HttpURLConnection;
-import java.net.InetAddress;
 import java.net.URL;
-import java.net.UnknownHostException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
@@ -258,6 +255,20 @@ public class ImageLoader {
         }
     }
 
+    /**
+     * 清除所有任务，必须在主线程调用
+     */
+    public void clear() {
+        Utility.checkMain();
+        for (Map.Entry<String, Future> entry : TASK.entrySet()) {
+            Future future = entry.getValue();
+            if (future != null) {
+                future.cancel(true);
+            }
+        }
+        TASK.clear();
+    }
+
     private static class ImageHandler extends Handler {
         private static final int DISK_LOAD_COMPLETE = 0;//硬盘读取完毕
         private static final int HTTP_LOAD_COMPLETE = 1;//网络下载完毕
@@ -314,10 +325,10 @@ public class ImageLoader {
             if (file == null || config == null || url == null || width < 1 || height < 1) {
                 return;
             }
-            getBitmap(imageView, url, file, width, height, callback, config);
+            getImage(imageView, url, file, width, height, callback, config);
         }
 
-        protected void getBitmap(ImageView imageView, String url, File file, Integer width, Integer height, ImageLoaderCallback callback, ImageConfig config) {
+        protected void getImage(ImageView imageView, String url, File file, Integer width, Integer height, ImageLoaderCallback callback, ImageConfig config) {
             String path = file.getAbsolutePath();
             BitmapFactory.Options options = getBitmapOption(path, width, height);
 
@@ -360,13 +371,15 @@ public class ImageLoader {
      * 从网络加载图片
      */
     private static class HttpRunnable extends DiskRunnable {
+        private static final String PNG = "image/png";
+        private static final String JPG = "image/jpeg";
 
         private HttpRunnable(ImageView imageView, String url, File file, int scaleWidth, int scaleHeight, ImageLoaderCallback callback, ImageConfig config) {
             super(imageView, url, file, scaleWidth, scaleHeight, callback, config);
         }
 
         @Override
-        protected void getBitmap(ImageView imageView, String url, File file, Integer width, Integer height, ImageLoaderCallback callback, ImageConfig config) {
+        protected void getImage(ImageView imageView, String url, File file, Integer width, Integer height, ImageLoaderCallback callback, ImageConfig config) {
             String path = file.getAbsolutePath();
             Bitmap bitmap = null;
             String[] mimeTypeHolder = new String[1];
@@ -375,12 +388,18 @@ public class ImageLoader {
                 if (data == null) {
                     return;
                 }
-                BitmapFactory.Options options = getBitmapOption(data, width, height);
-                if (options == null) {
-                    bitmap = BitmapFactory.decodeByteArray(data, 0, data.length);
-                } else {
-                    bitmap = BitmapFactory.decodeByteArray(data, 0, data.length, options);
+                switch (mimeTypeHolder[0]) {
+                    case PNG:
+                    case JPG:
+                        BitmapFactory.Options options = getBitmapOption(data, width, height);
+                        if (options == null) {
+                            bitmap = BitmapFactory.decodeByteArray(data, 0, data.length);
+                        } else {
+                            bitmap = BitmapFactory.decodeByteArray(data, 0, data.length, options);
+                        }
+                        break;
                 }
+
             } catch (Exception e) {
                 e.printStackTrace();
             }

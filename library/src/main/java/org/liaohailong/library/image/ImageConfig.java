@@ -11,11 +11,11 @@ import java.io.File;
 
 public class ImageConfig {
     //图片文件本地缓存路径
-    private File cacheDirectory  = RootApplication.getInstance().getCacheDir();
+    private File cacheDirectory = RootApplication.getInstance().getCacheDir();
     //图片默认裁剪宽度
     private int defaultWidth = 1280;
     //图片默认裁剪高度
-    private int defaultHeight= 720;
+    private int defaultHeight = 720;
     //是否打印log
     private boolean writeLog = false;
 
@@ -26,6 +26,18 @@ public class ImageConfig {
     public void setCacheDirectory(File cacheDirectory) {
         this.cacheDirectory = cacheDirectory;
     }
+
+    public void setCacheDirectory(String cacheDirectory) {
+        File file = new File(cacheDirectory);
+        if (file.exists() && !file.isDirectory()) {
+            boolean delete = file.delete();
+        }
+        if (!file.exists()) {
+            boolean mkdirs = file.mkdirs();
+        }
+        this.cacheDirectory = file;
+    }
+
 
     public int getDefaultWidth() {
         return defaultWidth;

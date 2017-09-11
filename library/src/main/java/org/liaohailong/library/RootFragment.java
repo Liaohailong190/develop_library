@@ -10,7 +10,7 @@ import android.view.ViewGroup;
 import org.liaohailong.library.inject.Victor;
 
 /**
- * 所有APP基类 项目BaseFragment需集成此类
+ * 所有APP基类 项目BaseFragment需继承此类
  * Created by LHL on 2017/9/6.
  */
 
