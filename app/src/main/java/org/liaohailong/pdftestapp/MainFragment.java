@@ -29,7 +29,7 @@ import java.util.List;
  * Created by LHL on 2017/9/6.
  */
 @BindContentView(R.layout.fragment_main)
-public class MainFragment extends BaseFragment{
+public class MainFragment extends BaseFragment {
     @BindView(R.id.text_fragment)
     private TextView textView;
     @BindView(R.id.avatar)
@@ -38,6 +38,9 @@ public class MainFragment extends BaseFragment{
     @SaveState
     private int count = 0;
     private static final String TEXT = "我被点击了!!";
+
+    private String imageUrl01 = "https://timgsa.baidu.com/timg?image&quality=80&size=b9999_10000&sec=1505054331352&di=67367353f3ac52e7cdaca7221de9c39d&imgtype=0&src=http%3A%2F%2Fimg.mp.itc.cn%2Fupload%2F20161003%2F599d93c935d646b9a1b7e8adb049a8fa_th.jpg";
+    private String imageUrl02 = "/storage/emulated/0/output_image.jpg";
 
     @Override
     public void onViewCreated(View view, @Nullable Bundle savedInstanceState) {
@@ -84,9 +87,18 @@ public class MainFragment extends BaseFragment{
                 break;
         }
     }
+
     @OnClick(R.id.avatar)
-    private void showImage(View view){
-        ImageLoader.getInstance().setImage(avatar,"https://timgsa.baidu.com/timg?image&quality=80&size=b9999_10000&sec=1505054331352&di=67367353f3ac52e7cdaca7221de9c39d&imgtype=0&src=http%3A%2F%2Fimg.mp.itc.cn%2Fupload%2F20161003%2F599d93c935d646b9a1b7e8adb049a8fa_th.jpg");
+    private void showImage(View view) {
+        Object tag = avatar.getTag();
+        if (tag == null) {
+            ImageLoader.getInstance().setImage(avatar, imageUrl01);
+            avatar.setTag(true);
+            return;
+        }
+        boolean isUrl = (boolean) tag;
+        ImageLoader.getInstance().setImage(avatar, isUrl ? imageUrl02 : imageUrl01);
+        avatar.setTag(!isUrl);
     }
 
 }

@@ -1,5 +1,6 @@
 package org.liaohailong.library.image;
 
+import android.Manifest;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.drawable.Drawable;
@@ -45,22 +46,27 @@ import java.util.concurrent.Future;
 
 public class ImageLoader {
     private static final String TAG = "ImageLoader";
-    private ImageLoader(){
+    private static final String HTTP = "http";
+    private static final String SD_CARD = "/storage/emulated/0";
+
+    private ImageLoader() {
 
     }
+
     private static final class SingletonHolder {
         private static final ImageLoader INSTANCE = new ImageLoader();
     }
-    public static ImageLoader getInstance(){
+
+    public static ImageLoader getInstance() {
         return SingletonHolder.INSTANCE;
     }
 
     private ImageConfig config = new ImageConfig();
 
     private static final int THREAD_POOL_SIZE = 5;
-    private static final ExecutorService EXECUTOR =  Executors.newFixedThreadPool(THREAD_POOL_SIZE);
+    private static final ExecutorService EXECUTOR = Executors.newFixedThreadPool(THREAD_POOL_SIZE);
     private static final Handler HANDLER = new ImageHandler();
-    private static final Map<String,Future> TASK = new HashMap<>();
+    private static final Map<String, Future> TASK = new HashMap<>();
     private static final int BUFF_SIZE = 8192;//文件IO buff字节数
 
     public ImageConfig getConfig() {
@@ -69,101 +75,115 @@ public class ImageLoader {
 
     private static final BitmapLruCache CACHE = new BitmapLruCache();
 
-    public void setImage(ImageView imageView,String url){
-        setImage(imageView,url,0);
-    }
-    public void setImage(ImageView imageView,String url, @DrawableRes int placeHolder){
-        setImage(imageView,url,placeHolder,null);
+    public void setImage(ImageView imageView, String url) {
+        setImage(imageView, url, 0);
     }
 
-    public void setImage(ImageView imageView,String url, @DrawableRes int placeHolder,ImageLoaderCallback callback){
+    public void setImage(ImageView imageView, String url, @DrawableRes int placeHolder) {
+        setImage(imageView, url, placeHolder, null);
+    }
+
+    public void setImage(ImageView imageView, String url, @DrawableRes int placeHolder, ImageLoaderCallback callback) {
         int defaultWidth = config.getDefaultWidth();
         int defaultHeight = config.getDefaultHeight();
-        setImage(imageView,url,placeHolder,defaultWidth,defaultHeight,callback);
+        setImage(imageView, url, placeHolder, defaultWidth, defaultHeight, callback);
     }
 
-    public void setImage(ImageView imageView,String url, @DrawableRes int placeHolder, int scaleWidth, int scaleHeight, ImageLoaderCallback callback){
+    public void setImage(ImageView imageView, String url, @DrawableRes int placeHolder, int scaleWidth, int scaleHeight, ImageLoaderCallback callback) {
         //先从内存缓存中读取
-        if (getBitmapFromLruCache(imageView,url,scaleWidth,scaleHeight,callback)) {
+        if (getBitmapFromLruCache(imageView, url, scaleWidth, scaleHeight, callback)) {
             return;
         }
-        setPlaceHolder(imageView,placeHolder);
+        setPlaceHolder(imageView, placeHolder);
         //再从硬盘缓存读取
-        if (getBitmapFromDiskCache(imageView,url,scaleWidth,scaleHeight,callback)) {
+        if (getBitmapFromDiskCache(imageView, url, scaleWidth, scaleHeight, callback)) {
             return;
         }
         //从网络下载
-        getBitmapFromHttp(imageView,url,scaleWidth,scaleHeight,callback);
+        if (url.startsWith(HTTP)) {
+            getBitmapFromHttp(imageView, url, scaleWidth, scaleHeight, callback);
+        }
     }
 
-    private void setPlaceHolder(ImageView imageView,@DrawableRes int placeHolder){
+    private void setPlaceHolder(ImageView imageView, @DrawableRes int placeHolder) {
         if (imageView == null || placeHolder <= 0) {
             return;
         }
-        try{
+        try {
             Drawable placeHolderDrawable = RootApplication.getInstance().getResources().getDrawable(placeHolder);
             if (placeHolderDrawable != null) {
                 imageView.setImageDrawable(placeHolderDrawable);
             }
-        }catch (Exception ex){
+        } catch (Exception ex) {
             ex.printStackTrace();
         }
     }
 
-    private boolean getBitmapFromLruCache(ImageView imageView,String url,int scaleWidth,int scaleHeight,ImageLoaderCallback callback){
+    private boolean getBitmapFromLruCache(ImageView imageView, String url, int scaleWidth, int scaleHeight, ImageLoaderCallback callback) {
         String fileName = getFileName(url, scaleWidth, scaleHeight);
         Bitmap bitmap = CACHE.get(fileName);
         if (bitmap != null) {
-            done(fileName,bitmap,imageView,callback);
+            done(fileName, bitmap, imageView, callback);
             return true;
         }
         return false;
     }
 
-    private boolean getBitmapFromDiskCache(ImageView imageView,String url,int scaleWidth,int scaleHeight,ImageLoaderCallback callback){
-        File diskBitmap = getSavePath(url, scaleWidth, scaleHeight);
+    private synchronized boolean getBitmapFromDiskCache(ImageView imageView, String url, int scaleWidth, int scaleHeight, ImageLoaderCallback callback) {
+        File diskBitmap = null;
+        //先判断路径类型
+        if (url.startsWith(HTTP)) {
+            diskBitmap = getSavePath(url, scaleWidth, scaleHeight);
+        } else if (url.startsWith(SD_CARD)) {
+            diskBitmap = new File(url);
+        }
+        if (diskBitmap == null) {
+            return false;
+        }
         //判断是否命中本地SD卡缓存
         if (diskBitmap.exists() && diskBitmap.isFile()) {
             if (!TASK.containsKey(url)) {
-                DiskRunnable diskRunnable = new DiskRunnable(imageView,url,diskBitmap,scaleWidth,scaleHeight,callback,getConfig());
+                DiskRunnable diskRunnable = new DiskRunnable(imageView, url, diskBitmap, scaleWidth, scaleHeight, callback, getConfig());
                 Future task = EXECUTOR.submit(diskRunnable);
-                TASK.put(url,task);
+                TASK.put(url, task);
             }
             return true;
         }
         return false;
     }
 
-    private void getBitmapFromHttp(ImageView imageView,String url,int scaleWidth,int scaleHeight,ImageLoaderCallback callback){
+    private synchronized void getBitmapFromHttp(ImageView imageView, String url, int scaleWidth, int scaleHeight, ImageLoaderCallback callback) {
         if (!TASK.containsKey(url)) {
             HttpRunnable httpRunnable = new HttpRunnable(imageView, url, getSavePath(url, scaleWidth, scaleHeight), scaleWidth, scaleHeight, callback, getConfig());
             Future task = EXECUTOR.submit(httpRunnable);
-            TASK.put(url,task);
+            TASK.put(url, task);
         }
     }
 
     /**
      * 获取本地缓存图片路径
-     * @param url 网络图片地址
-     * @param scaleWidth 裁剪宽度
+     *
+     * @param url         网络图片地址
+     * @param scaleWidth  裁剪宽度
      * @param scaleHeight 裁剪高度
      * @return 本地缓存文件
      */
-    private File getSavePath(String url,int scaleWidth,int scaleHeight){
+    private File getSavePath(String url, int scaleWidth, int scaleHeight) {
         File cacheDirectory = config.getCacheDirectory();
-        String fileName =getFileName(url,scaleWidth,scaleHeight);
-        return new File(cacheDirectory,fileName);
+        String fileName = getFileName(url, scaleWidth, scaleHeight);
+        return new File(cacheDirectory, fileName);
     }
 
     /**
      * 根据不同的图片要求尺寸获取文件名称
-     * @param url 网络图片地址
-     * @param scaleWidth 裁剪宽度
+     *
+     * @param url         网络图片地址
+     * @param scaleWidth  裁剪宽度
      * @param scaleHeight 裁剪高度
      * @return 本地缓存文件名称
      */
-    private String getFileName(String url,int scaleWidth,int scaleHeight){
-        return Md5Util.MD5Encode(url) + "?width="+scaleWidth +"&height=" + scaleHeight;
+    private String getFileName(String url, int scaleWidth, int scaleHeight) {
+        return Md5Util.MD5Encode(url) + "?width=" + scaleWidth + "&height=" + scaleHeight;
     }
 
     private static BitmapFactory.Options getBitmapOption(byte[] bytes, int w, int h) {
@@ -220,13 +240,13 @@ public class ImageLoader {
     }
 
 
-    private static void done(String fileName, Bitmap bitmap, ImageView imageView,ImageLoaderCallback callback){
-        if (bitmap==null || fileName == null) {
+    private static void done(String fileName, Bitmap bitmap, ImageView imageView, ImageLoaderCallback callback) {
+        if (bitmap == null || fileName == null) {
             return;
         }
         //完成任务之后首先进行内存缓存
         if (!CACHE.containsKey(fileName)) {
-            CACHE.put(fileName,bitmap);
+            CACHE.put(fileName, bitmap);
         }
         //设置图片
         if (imageView != null) {
@@ -234,11 +254,11 @@ public class ImageLoader {
         }
         //回调接口
         if (callback != null) {
-            callback.onImageLoadComplete(fileName,bitmap,imageView);
+            callback.onImageLoadComplete(fileName, bitmap, imageView);
         }
     }
 
-    private static class ImageHandler extends Handler{
+    private static class ImageHandler extends Handler {
         private static final int DISK_LOAD_COMPLETE = 0;//硬盘读取完毕
         private static final int HTTP_LOAD_COMPLETE = 1;//网络下载完毕
 
@@ -247,10 +267,10 @@ public class ImageLoader {
             Holder holder = (Holder) msg.obj;
             switch (msg.what) {
                 case DISK_LOAD_COMPLETE:
-                    done(holder.fileName,holder.bitmap,holder.imageView,holder.callback);
+                    done(holder.fileName, holder.bitmap, holder.imageView, holder.callback);
                     break;
                 case HTTP_LOAD_COMPLETE:
-                    done(holder.fileName,holder.bitmap,holder.imageView,holder.callback);
+                    done(holder.fileName, holder.bitmap, holder.imageView, holder.callback);
                     break;
             }
             //清除缓存任务
@@ -263,7 +283,7 @@ public class ImageLoader {
     /**
      * 从硬盘读取图片任务
      */
-    private static class DiskRunnable implements Runnable{
+    private static class DiskRunnable implements Runnable {
         private WeakReference<ImageView> imageViewWeakReference;
         private WeakReference<String> urlWeakReference;
         private WeakReference<File> fileWeakReference;
@@ -272,7 +292,7 @@ public class ImageLoader {
         private WeakReference<ImageLoaderCallback> callbackWeakReference;
         private WeakReference<ImageConfig> configWeakReference;
 
-        private DiskRunnable(ImageView imageView,String url,File file,int scaleWidth,int scaleHeight,ImageLoaderCallback callback,ImageConfig config){
+        private DiskRunnable(ImageView imageView, String url, File file, int scaleWidth, int scaleHeight, ImageLoaderCallback callback, ImageConfig config) {
             imageViewWeakReference = new WeakReference<>(imageView);
             urlWeakReference = new WeakReference<>(url);
             fileWeakReference = new WeakReference<>(file);
@@ -291,13 +311,13 @@ public class ImageLoader {
             Integer height = heightWeakReference.get();
             ImageLoaderCallback callback = callbackWeakReference.get();
             ImageConfig config = configWeakReference.get();
-            if (file == null ||config == null ||url == null|| width <1 || height < 1) {
+            if (file == null || config == null || url == null || width < 1 || height < 1) {
                 return;
             }
-            getBitmap(imageView,url,file,width,height,callback,config);
+            getBitmap(imageView, url, file, width, height, callback, config);
         }
 
-        protected void getBitmap(ImageView imageView,String url,File file,Integer width,Integer height,ImageLoaderCallback callback,ImageConfig config){
+        protected void getBitmap(ImageView imageView, String url, File file, Integer width, Integer height, ImageLoaderCallback callback, ImageConfig config) {
             String path = file.getAbsolutePath();
             BitmapFactory.Options options = getBitmapOption(path, width, height);
 
@@ -309,25 +329,25 @@ public class ImageLoader {
             } catch (Exception e) {
                 e.printStackTrace();
                 if (config.isWriteLog()) {
-                    Log.i(TAG,"读取硬盘缓存图片异常 exception = "  + e.toString());
+                    Log.i(TAG, "读取硬盘缓存图片异常 exception = " + e.toString());
                 }
-            }finally {
+            } finally {
                 Utility.close(fis);
             }
 
             if (bitmap == null) {
                 return;
             }
-           send2Handler(imageView,url,bitmap,callback,path,ImageHandler.DISK_LOAD_COMPLETE);
+            send2Handler(imageView, url, bitmap, callback, path, ImageHandler.DISK_LOAD_COMPLETE);
         }
 
-        protected void send2Handler(ImageView imageView,String url,Bitmap bitmap,ImageLoaderCallback callback,String path,int flag){
+        protected void send2Handler(ImageView imageView, String url, Bitmap bitmap, ImageLoaderCallback callback, String path, int flag) {
             Holder holder = new Holder();
             holder.imageView = imageView;
             holder.url = url;
             holder.callback = callback;
             String[] split = path.split("/");
-            holder.fileName = split[split.length -1];
+            holder.fileName = split[split.length - 1];
             holder.bitmap = bitmap;
             Message message = HANDLER.obtainMessage();
             message.what = flag;
@@ -339,7 +359,7 @@ public class ImageLoader {
     /**
      * 从网络加载图片
      */
-    private static class HttpRunnable extends DiskRunnable{
+    private static class HttpRunnable extends DiskRunnable {
 
         private HttpRunnable(ImageView imageView, String url, File file, int scaleWidth, int scaleHeight, ImageLoaderCallback callback, ImageConfig config) {
             super(imageView, url, file, scaleWidth, scaleHeight, callback, config);
@@ -351,15 +371,15 @@ public class ImageLoader {
             Bitmap bitmap = null;
             String[] mimeTypeHolder = new String[1];
             try {
-                byte[] data = getRawDataFromHttp(url,mimeTypeHolder);
-                if (data ==null) {
+                byte[] data = getRawDataFromHttp(url, mimeTypeHolder);
+                if (data == null) {
                     return;
                 }
                 BitmapFactory.Options options = getBitmapOption(data, width, height);
                 if (options == null) {
-                    bitmap = BitmapFactory.decodeByteArray(data,0,data.length);
-                }else {
-                    bitmap = BitmapFactory.decodeByteArray(data,0,data.length,options);
+                    bitmap = BitmapFactory.decodeByteArray(data, 0, data.length);
+                } else {
+                    bitmap = BitmapFactory.decodeByteArray(data, 0, data.length, options);
                 }
             } catch (Exception e) {
                 e.printStackTrace();
@@ -368,11 +388,11 @@ public class ImageLoader {
                 return;
             }
             //保存图片至本地
-            save2Disk(bitmap,file,mimeTypeHolder[0]);
-            send2Handler(imageView,url,bitmap,callback,path,ImageHandler.HTTP_LOAD_COMPLETE);
+            save2Disk(bitmap, file, mimeTypeHolder[0]);
+            send2Handler(imageView, url, bitmap, callback, path, ImageHandler.HTTP_LOAD_COMPLETE);
         }
 
-        private byte[] getRawDataFromHttp(String url,@Size(1) String[] mimeTypeHolder) throws InterruptedIOException {
+        private byte[] getRawDataFromHttp(String url, @Size(1) String[] mimeTypeHolder) throws InterruptedIOException {
             byte[] rawData = null;
             InputStream inputStream = null;
             ByteArrayOutputStream outputStream = null;
@@ -430,7 +450,7 @@ public class ImageLoader {
             return cache.toByteArray();
         }
 
-        private void save2Disk(Bitmap bitmap,File file,String mimeType){
+        private void save2Disk(Bitmap bitmap, File file, String mimeType) {
             if (file.exists()) {
                 if (file.isFile()) {
                     return;
@@ -442,24 +462,24 @@ public class ImageLoader {
             }
             final int quality = 100;
             BufferedOutputStream bos = null;
-            try{
+            try {
                 bos = new BufferedOutputStream(new FileOutputStream(file), BUFF_SIZE);
 
-                if (TextUtils.equals(mimeType,"image/png")) {
-                    bitmap.compress(Bitmap.CompressFormat.PNG,quality,bos);
-                }else {
-                    bitmap.compress(Bitmap.CompressFormat.JPEG,quality,bos);
+                if (TextUtils.equals(mimeType, "image/png")) {
+                    bitmap.compress(Bitmap.CompressFormat.PNG, quality, bos);
+                } else {
+                    bitmap.compress(Bitmap.CompressFormat.JPEG, quality, bos);
                 }
                 bos.flush();
-            }catch (Exception ex){
+            } catch (Exception ex) {
                 ex.printStackTrace();
-            }finally {
+            } finally {
                 Utility.close(bos);
             }
         }
     }
 
-    private static class Holder{
+    private static class Holder {
         private ImageView imageView;
         private String url;
         private Bitmap bitmap;

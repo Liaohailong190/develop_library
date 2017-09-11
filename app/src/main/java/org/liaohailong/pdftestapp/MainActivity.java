@@ -1,5 +1,6 @@
 package org.liaohailong.pdftestapp;
 
+import android.Manifest;
 import android.graphics.Color;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentTransaction;
@@ -11,6 +12,7 @@ import org.liaohailong.library.inject.BindContentView;
 import org.liaohailong.library.inject.OnClick;
 import org.liaohailong.library.inject.BindView;
 import org.liaohailong.library.inject.OnLongClick;
+import org.liaohailong.library.util.PermissionUtil;
 
 import java.util.Random;
 
@@ -21,6 +23,7 @@ import java.util.Random;
 @BindContentView(R.layout.activity_main)
 public class MainActivity extends BaseActivity {
     private static int[] COLORS = new int[]{Color.RED, Color.GREEN, Color.BLUE};
+    private static final String PERMISSION_WRITE_EXTERNAL_STORAGE = Manifest.permission.WRITE_EXTERNAL_STORAGE;
 
     @BindView(R.id.toast_text)
     private TextView textView;
@@ -58,6 +61,7 @@ public class MainActivity extends BaseActivity {
         if (mainFragment != null) {
             return false;
         }
+        PermissionUtil.requestPermissionIfNeed(this, PERMISSION_WRITE_EXTERNAL_STORAGE, "", 0);
         try {
             FragmentManager fm = getSupportFragmentManager();
             FragmentTransaction ft = fm.beginTransaction();
