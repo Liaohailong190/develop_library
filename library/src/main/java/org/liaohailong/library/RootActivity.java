@@ -21,11 +21,10 @@ public class RootActivity extends AppCompatActivity {
     }
 
     @Override
-    public void onSaveInstanceState(Bundle outState, PersistableBundle outPersistentState) {
-        super.onSaveInstanceState(outState, outPersistentState);
+    protected void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
         Victor.getSaveState(this, outState);
     }
-
 
     @Override
     protected void onDestroy() {

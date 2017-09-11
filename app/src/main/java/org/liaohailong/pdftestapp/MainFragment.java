@@ -6,6 +6,8 @@ import android.view.View;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import com.bumptech.glide.Glide;
+
 import org.liaohailong.library.async.Cat;
 import org.liaohailong.library.async.Async;
 import org.liaohailong.library.async.Mouse;
@@ -98,7 +100,7 @@ public class MainFragment extends BaseFragment {
             return;
         }
         boolean isUrl = (boolean) tag;
-        ImageLoader.getInstance().setImage(avatar, isUrl ? imageUrl02 : imageUrl01);
+        ImageLoader.getInstance().setImage(avatar, isUrl ? imageUrl02 : imageUrl01, R.drawable.eee_drawable);
         avatar.setTag(!isUrl);
     }
 }

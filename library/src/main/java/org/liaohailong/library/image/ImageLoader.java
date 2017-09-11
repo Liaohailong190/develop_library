@@ -103,7 +103,7 @@ public class ImageLoader {
     }
 
     private void setPlaceHolder(ImageView imageView, @DrawableRes int placeHolder) {
-        if (imageView == null || placeHolder <= 0) {
+        if (imageView == null || placeHolder < 0) {
             return;
         }
         try {
@@ -388,18 +388,12 @@ public class ImageLoader {
                 if (data == null) {
                     return;
                 }
-                switch (mimeTypeHolder[0]) {
-                    case PNG:
-                    case JPG:
-                        BitmapFactory.Options options = getBitmapOption(data, width, height);
-                        if (options == null) {
-                            bitmap = BitmapFactory.decodeByteArray(data, 0, data.length);
-                        } else {
-                            bitmap = BitmapFactory.decodeByteArray(data, 0, data.length, options);
-                        }
-                        break;
+                BitmapFactory.Options options = getBitmapOption(data, width, height);
+                if (options == null) {
+                    bitmap = BitmapFactory.decodeByteArray(data, 0, data.length);
+                } else {
+                    bitmap = BitmapFactory.decodeByteArray(data, 0, data.length, options);
                 }
-
             } catch (Exception e) {
                 e.printStackTrace();
             }
@@ -484,7 +478,7 @@ public class ImageLoader {
             try {
                 bos = new BufferedOutputStream(new FileOutputStream(file), BUFF_SIZE);
 
-                if (TextUtils.equals(mimeType, "image/png")) {
+                if (TextUtils.equals(mimeType, PNG)) {
                     bitmap.compress(Bitmap.CompressFormat.PNG, quality, bos);
                 } else {
                     bitmap.compress(Bitmap.CompressFormat.JPEG, quality, bos);
