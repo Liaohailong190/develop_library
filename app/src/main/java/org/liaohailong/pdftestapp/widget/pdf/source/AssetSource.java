@@ -13,7 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.liaohailong.pdftestapp.widget.source;
+package org.liaohailong.pdftestapp.widget.pdf.source;
+
 
 import android.content.Context;
 import android.os.ParcelFileDescriptor;
@@ -21,20 +22,23 @@ import android.os.ParcelFileDescriptor;
 import com.shockwave.pdfium.PdfDocument;
 import com.shockwave.pdfium.PdfiumCore;
 
+import org.liaohailong.pdftestapp.widget.pdf.util.FileUtils;
+
 import java.io.File;
 import java.io.IOException;
 
-public class FileSource implements DocumentSource {
+public class AssetSource implements DocumentSource {
 
-    private File file;
+    private final String assetName;
 
-    public FileSource(File file) {
-        this.file = file;
+    public AssetSource(String assetName) {
+        this.assetName = assetName;
     }
 
     @Override
     public PdfDocument createDocument(Context context, PdfiumCore core, String password) throws IOException {
-        ParcelFileDescriptor pfd = ParcelFileDescriptor.open(file, ParcelFileDescriptor.MODE_READ_ONLY);
+        File f = FileUtils.fileFromAsset(context, assetName);
+        ParcelFileDescriptor pfd = ParcelFileDescriptor.open(f, ParcelFileDescriptor.MODE_READ_ONLY);
         return core.newDocument(pfd, password);
     }
 }

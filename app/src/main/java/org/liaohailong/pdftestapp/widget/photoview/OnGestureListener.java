@@ -1,5 +1,5 @@
-/*
- * Copyright (C) 2016 Bartosz Schiller.
+/*******************************************************************************
+ * Copyright 2011, 2012 Chris Banes.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -12,16 +12,16 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- */
-package org.liaohailong.pdftestapp.widget.source;
+ *******************************************************************************/
+package org.liaohailong.pdftestapp.widget.photoview;
 
-import android.content.Context;
+interface OnGestureListener {
 
-import com.shockwave.pdfium.PdfDocument;
-import com.shockwave.pdfium.PdfiumCore;
+    void onDrag(float dx, float dy);
 
-import java.io.IOException;
+    void onFling(float startX, float startY, float velocityX,
+                 float velocityY);
 
-public interface DocumentSource {
-    PdfDocument createDocument(Context context, PdfiumCore core, String password) throws IOException;
+    void onScale(float scaleFactor, float focusX, float focusY);
+
 }

@@ -1,14 +1,11 @@
-package org.liaohailong.pdftestapp.widget.task;
-
-import android.os.Handler;
-import android.os.Message;
+package org.liaohailong.pdftestapp.widget.pdf.task;
 
 import com.shockwave.pdfium.PdfDocument;
 import com.shockwave.pdfium.PdfiumCore;
 
 import org.liaohailong.pdftestapp.VictorApplication;
-import org.liaohailong.pdftestapp.widget.PdfView;
-import org.liaohailong.pdftestapp.widget.source.DocumentSource;
+import org.liaohailong.pdftestapp.widget.pdf.PdfView;
+import org.liaohailong.pdftestapp.widget.pdf.source.DocumentSource;
 
 import java.io.IOException;
 

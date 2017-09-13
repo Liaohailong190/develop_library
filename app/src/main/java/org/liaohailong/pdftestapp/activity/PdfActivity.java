@@ -5,12 +5,14 @@ import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
+import android.view.View;
 
 import org.liaohailong.library.inject.BindContentView;
 import org.liaohailong.library.inject.BindView;
+import org.liaohailong.library.inject.OnClick;
 import org.liaohailong.pdftestapp.BaseActivity;
 import org.liaohailong.pdftestapp.R;
-import org.liaohailong.pdftestapp.widget.PdfView;
+import org.liaohailong.pdftestapp.widget.pdf.PdfView;
 
 /**
  * 展示PDF的界面
@@ -29,12 +31,25 @@ public class PdfActivity extends BaseActivity {
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
         pdfView.fromAsset("sample.pdf")
                 .setOrientation(PdfView.VERTICAL)
                 .setDefaultPage(0)
                 .load();
+    }
 
+    @OnClick(R.id.pre_btn)
+    private void showPre(View view) {
+        pdfView.jumpToPrevious();
+    }
 
+    @OnClick(R.id.next_btn)
+    private void showNext(View view) {
+        pdfView.jumpToNext();
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        pdfView.release();
     }
 }

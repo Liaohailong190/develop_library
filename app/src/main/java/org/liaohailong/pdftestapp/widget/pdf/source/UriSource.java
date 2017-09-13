@@ -13,32 +13,28 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.liaohailong.pdftestapp.widget.source;
-
+package org.liaohailong.pdftestapp.widget.pdf.source;
 
 import android.content.Context;
+import android.net.Uri;
 import android.os.ParcelFileDescriptor;
 
 import com.shockwave.pdfium.PdfDocument;
 import com.shockwave.pdfium.PdfiumCore;
 
-import org.liaohailong.pdftestapp.widget.util.FileUtils;
-
-import java.io.File;
 import java.io.IOException;
 
-public class AssetSource implements DocumentSource {
+public class UriSource implements DocumentSource {
 
-    private final String assetName;
+    private Uri uri;
 
-    public AssetSource(String assetName) {
-        this.assetName = assetName;
+    public UriSource(Uri uri) {
+        this.uri = uri;
     }
 
     @Override
     public PdfDocument createDocument(Context context, PdfiumCore core, String password) throws IOException {
-        File f = FileUtils.fileFromAsset(context, assetName);
-        ParcelFileDescriptor pfd = ParcelFileDescriptor.open(f, ParcelFileDescriptor.MODE_READ_ONLY);
+        ParcelFileDescriptor pfd = context.getContentResolver().openFileDescriptor(uri, "r");
         return core.newDocument(pfd, password);
     }
 }
