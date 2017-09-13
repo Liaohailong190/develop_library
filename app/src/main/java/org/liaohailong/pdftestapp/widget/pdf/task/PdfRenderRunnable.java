@@ -37,8 +37,8 @@ public class PdfRenderRunnable implements Runnable {
         Bitmap bitmap = Bitmap.createBitmap(pageWidth, pageHeight, Bitmap.Config.ARGB_8888);
         pdfiumCore.renderPageBitmap(pdfDocument, bitmap, pageIndex, 0, 0, pageWidth, pageHeight);
         PhotoView view = pdfResult.getView();
-        int width = (int) (view.getWidth() * 1.5f);
-        int height = (int) (view.getHeight() * 1.5f);
+        int width = view.getWidth() * 2;
+        int height = view.getHeight() * 2;
         Bitmap result = Bitmap.createScaledBitmap(bitmap, width, height, true);
         pdfResult.setBitmap(result);
         pdfResult.setPageIndex(pageIndex);
