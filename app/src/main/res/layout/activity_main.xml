@@ -13,14 +13,14 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:gravity="center"
-            android:text="弹弹弹一号" />
+            android:text="弹弹弹" />
 
         <Button
             android:id="@+id/btn_02"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:gravity="center"
-            android:text="弹弹弹二号" />
+            android:text="跳转PDF界面" />
 
         <Button
             android:id="@+id/btn_03"

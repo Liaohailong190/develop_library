@@ -31,4 +31,6 @@ dependencies {
     //目前最好用的图片处理库
     compile 'com.github.bumptech.glide:glide:3.7.0'
     compile 'com.android.support:support-v4:25.0.0'
+    //pdf相关
+    compile 'com.github.barteksc:pdfium-android:1.7.0'
 }
