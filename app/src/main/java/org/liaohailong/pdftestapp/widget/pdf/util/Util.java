@@ -16,7 +16,9 @@
 package org.liaohailong.pdftestapp.widget.pdf.util;
 
 import android.content.Context;
+import android.graphics.Point;
 import android.util.TypedValue;
+import android.view.WindowManager;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -37,5 +39,19 @@ public class Util {
             os.write(buffer, 0, n);
         }
         return os.toByteArray();
+    }
+
+    /**
+     * 获取手机屏幕宽，高  point对象
+     *
+     * @param context
+     * @return
+     */
+    public static Point getWindowPoint(Context context) {
+        WindowManager wm = (WindowManager) context
+                .getSystemService(Context.WINDOW_SERVICE);
+        Point point = new Point();
+        wm.getDefaultDisplay().getSize(point);
+        return point;
     }
 }

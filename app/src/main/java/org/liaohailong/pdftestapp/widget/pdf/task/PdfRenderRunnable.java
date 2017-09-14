@@ -1,11 +1,13 @@
 package org.liaohailong.pdftestapp.widget.pdf.task;
 
 import android.graphics.Bitmap;
+import android.graphics.Point;
 
 import com.shockwave.pdfium.PdfDocument;
 import com.shockwave.pdfium.PdfiumCore;
 
 import org.liaohailong.pdftestapp.widget.pdf.PdfView;
+import org.liaohailong.pdftestapp.widget.pdf.util.Util;
 import org.liaohailong.pdftestapp.widget.photoview.PhotoView;
 
 /**
@@ -37,8 +39,9 @@ public class PdfRenderRunnable implements Runnable {
         Bitmap bitmap = Bitmap.createBitmap(pageWidth, pageHeight, Bitmap.Config.ARGB_8888);
         pdfiumCore.renderPageBitmap(pdfDocument, bitmap, pageIndex, 0, 0, pageWidth, pageHeight);
         PhotoView view = pdfResult.getView();
-        int width = view.getWidth() * 2;
-        int height = view.getHeight() * 2;
+        Point windowPoint = Util.getWindowPoint(view.getContext());
+        int width = windowPoint.x * 2;
+        int height = windowPoint.y * 2;
         Bitmap result = Bitmap.createScaledBitmap(bitmap, width, height, true);
         pdfResult.setBitmap(result);
         pdfResult.setPageIndex(pageIndex);
