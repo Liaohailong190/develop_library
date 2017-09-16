@@ -5,6 +5,7 @@ import android.support.annotation.Nullable;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import org.liaohailong.library.async.Cat;
 import org.liaohailong.library.async.Async;
@@ -17,6 +18,7 @@ import org.liaohailong.library.inject.OnClick;
 import org.liaohailong.library.inject.BindView;
 import org.liaohailong.library.inject.SaveState;
 import org.liaohailong.pdftestapp.BaseFragment;
+import org.liaohailong.pdftestapp.JNI;
 import org.liaohailong.pdftestapp.R;
 import org.liaohailong.pdftestapp.model.Student;
 
@@ -89,6 +91,13 @@ public class MainFragment extends BaseFragment {
                 textView.setText(TEXT + count + "次");
                 break;
         }
+    }
+    @OnClick(R.id.jni_btn)
+    private void showJni(View v){
+        String getHelloWord = JNI.getHelloWord();
+        int addCalc = JNI.addCalc(1, 2);
+        String toast = "getHelloWord = " + getHelloWord + " addCalc = " + addCalc;
+        Toast.makeText(v.getContext(),toast,Toast.LENGTH_LONG).show();
     }
 
     @OnClick(R.id.avatar)
