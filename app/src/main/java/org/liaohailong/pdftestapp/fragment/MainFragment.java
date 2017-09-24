@@ -12,6 +12,8 @@ import org.liaohailong.library.async.Async;
 import org.liaohailong.library.async.Mouse;
 import org.liaohailong.library.async.Schedulers;
 import org.liaohailong.library.db.OrmDao;
+import org.liaohailong.library.db.OrmFactory;
+import org.liaohailong.library.http.HttpUtils;
 import org.liaohailong.library.image.ImageLoader;
 import org.liaohailong.library.inject.BindContentView;
 import org.liaohailong.library.inject.OnClick;
@@ -74,12 +76,12 @@ public class MainFragment extends BaseFragment {
                 .catOn(Schedulers.UI_THREAD)
                 .start();
 
-        OrmDao<Student> studentOrmDao = new OrmDao<>(Student.class);
-        studentOrmDao.save(new Student("小明", 1, 18));
-        studentOrmDao.save(new Student("小红", 0, 17));
-        studentOrmDao.save(new Student("小芳", 0, 16));
+        OrmDao<Student> dao = OrmFactory.getDao(Student.class);
+        dao.save(new Student("小明", 1, 18));
+        dao.save(new Student("小红", 0, 17));
+        dao.save(new Student("小芳", 0, 16));
 
-        List<Student> students = studentOrmDao.queryAll();
+        List<Student> students = dao.queryAll();
         students.clear();
     }
 

@@ -20,7 +20,7 @@ import java.util.Map;
 import java.util.Set;
 
 public class OrmDao<T> implements JsonInterface {
-    protected Dao daoOpe;
+    private Dao daoOpe;
 
     public OrmDao(Class clz) {
         try {
