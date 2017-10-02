@@ -10,6 +10,15 @@ public class HttpResponse {
     private int code = 400;
     private String data = "";
     private String error = "";
+    private HttpCallback callback;
+
+    public HttpCallback getCallback() {
+        return callback;
+    }
+
+    public void setCallback(HttpCallback callback) {
+        this.callback = callback;
+    }
 
     public int getCode() {
         return code;

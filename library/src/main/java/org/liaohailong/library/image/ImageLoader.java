@@ -12,7 +12,7 @@ import android.util.Log;
 import android.widget.ImageView;
 
 import org.liaohailong.library.RootApplication;
-import org.liaohailong.library.http.HttpUtils;
+import org.liaohailong.library.http.Http;
 import org.liaohailong.library.util.Md5Util;
 import org.liaohailong.library.util.Utility;
 
@@ -42,6 +42,7 @@ import java.util.concurrent.Future;
  */
 
 public class ImageLoader {
+    private static final int TIME_OUT = 1000 * 15;
     private static final String TAG = "ImageLoader";
     private static final String HTTP = "http";
     private static final String SD_CARD = "/storage/emulated/0";
@@ -423,8 +424,8 @@ public class ImageLoader {
                 String type = "GET";
                 connection.setRequestMethod(type);
                 connection.setUseCaches(true);
-                connection.setConnectTimeout(HttpUtils.HttpTask.TIME_OUT);
-                connection.setReadTimeout(HttpUtils.HttpTask.TIME_OUT);
+                connection.setConnectTimeout(TIME_OUT);
+                connection.setReadTimeout(TIME_OUT);
                 int code = connection.getResponseCode();
                 if (code != HttpURLConnection.HTTP_OK) {
                     return null;

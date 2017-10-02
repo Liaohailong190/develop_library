@@ -13,7 +13,8 @@ import org.liaohailong.library.async.Mouse;
 import org.liaohailong.library.async.Schedulers;
 import org.liaohailong.library.db.OrmDao;
 import org.liaohailong.library.db.OrmFactory;
-import org.liaohailong.library.http.HttpUtils;
+import org.liaohailong.library.http.Http;
+import org.liaohailong.library.http.HttpCallback;
 import org.liaohailong.library.image.ImageLoader;
 import org.liaohailong.library.inject.BindContentView;
 import org.liaohailong.library.inject.OnClick;
@@ -49,6 +50,8 @@ public class MainFragment extends BaseFragment {
     private String imageUrl02 = "/storage/emulated/0/output_image.jpg";
     private String imageUrl03 = "https://timgsa.baidu.com/timg?image&quality=80&size=b9999_10000&sec=1505106699538&di=6e7649394fca8898968dd0a1388c9b76&imgtype=0&src=http%3A%2F%2Fimg.mp.itc.cn%2Fupload%2F20160829%2F24997e71d5814cf48f307d7caece946c.gif";
 
+    private int httpRequestIndex = 0;
+
     @Override
     public void onViewCreated(View view, @Nullable Bundle savedInstanceState) {
         new Async<String>()
@@ -75,6 +78,21 @@ public class MainFragment extends BaseFragment {
                 .mouseOn(Schedulers.IO_THREAD)
                 .catOn(Schedulers.UI_THREAD)
                 .start();
+        httpRequestIndex = 0;
+        for (int i = 0; i < 20; i++) {
+            Http.create().url("https://www.baidu.com/").execute(new HttpCallback<String>() {
+                @Override
+                public void onSuccess(String result) {
+                    httpRequestIndex++;
+                    Toast.makeText(getContext(), "Http请求成功 i = " + httpRequestIndex + "  result = " + result, Toast.LENGTH_SHORT).show();
+                }
+
+                @Override
+                public void onFailure(int code, String info) {
+
+                }
+            });
+        }
 
         OrmDao<Student> dao = OrmFactory.getDao(Student.class);
         dao.save(new Student("小明", 1, 18));
@@ -94,12 +112,13 @@ public class MainFragment extends BaseFragment {
                 break;
         }
     }
+
     @OnClick(R.id.jni_btn)
-    private void showJni(View v){
+    private void showJni(View v) {
         String getHelloWord = JNI.getHelloWord();
         int addCalc = JNI.addCalc(1, 2);
         String toast = "getHelloWord = " + getHelloWord + " addCalc = " + addCalc;
-        Toast.makeText(v.getContext(),toast,Toast.LENGTH_LONG).show();
+        Toast.makeText(v.getContext(), toast, Toast.LENGTH_LONG).show();
     }
 
     @OnClick(R.id.avatar)

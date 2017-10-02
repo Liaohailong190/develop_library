@@ -18,9 +18,11 @@ import java.util.List;
  * Created by LHL on 2017/9/4.
  */
 
-public abstract class OnHttpCallback<T> {
+public abstract class HttpCallback<T> {
+    private String url;
 
-    public void setResponse(int code, String data) {
+    public void setResponse(String url,int code, String data) {
+        this.url = url;
         if (code == HttpURLConnection.HTTP_OK) {
             T rawData = getRawData(data);
             onSuccess(rawData);
@@ -72,6 +74,10 @@ public abstract class OnHttpCallback<T> {
 
     private String getResultListKey() {
         return "list";
+    }
+
+    public void onPreExecute(){
+
     }
 
     public abstract void onSuccess(T result);
