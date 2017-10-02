@@ -16,6 +16,8 @@ import java.util.concurrent.Executors;
  */
 
 public abstract class HttpWorker {
+    //配置参数相关
+    private static final int TIME_OUT = 1000 * 15;
     //请求网络主体相关
     private static final int CPU_COUNT = Runtime.getRuntime().availableProcessors();
     protected static final ExecutorService THREAD_POOL_EXECUTOR;
@@ -57,6 +59,10 @@ public abstract class HttpWorker {
 
     public HttpCallback getCallback() {
         return callback;
+    }
+
+    protected static int getTimeout() {
+        return TIME_OUT;
     }
 
     /**

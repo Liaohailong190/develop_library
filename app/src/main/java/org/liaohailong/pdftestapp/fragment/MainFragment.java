@@ -15,6 +15,8 @@ import org.liaohailong.library.db.OrmDao;
 import org.liaohailong.library.db.OrmFactory;
 import org.liaohailong.library.http.Http;
 import org.liaohailong.library.http.HttpCallback;
+import org.liaohailong.library.http.HttpUrlConnectionWorker;
+import org.liaohailong.library.http.OKHttpWorker;
 import org.liaohailong.library.image.ImageLoader;
 import org.liaohailong.library.inject.BindContentView;
 import org.liaohailong.library.inject.OnClick;
@@ -80,18 +82,20 @@ public class MainFragment extends BaseFragment {
                 .start();
         httpRequestIndex = 0;
         for (int i = 0; i < 20; i++) {
-            Http.create().url("https://www.baidu.com/").execute(new HttpCallback<String>() {
-                @Override
-                public void onSuccess(String result) {
-                    httpRequestIndex++;
-                    Toast.makeText(getContext(), "Http请求成功 i = " + httpRequestIndex + "  result = " + result, Toast.LENGTH_SHORT).show();
-                }
+            Http.create().url("https://www.baidu.com/")
+                    .worker(new OKHttpWorker())
+                    .execute(new HttpCallback<String>() {
+                        @Override
+                        public void onSuccess(String result) {
+                            httpRequestIndex++;
+                            Toast.makeText(getContext(), "Http请求成功 i = " + httpRequestIndex + "  result = " + result, Toast.LENGTH_SHORT).show();
+                        }
 
-                @Override
-                public void onFailure(int code, String info) {
+                        @Override
+                        public void onFailure(int code, String info) {
 
-                }
-            });
+                        }
+                    });
         }
 
         OrmDao<Student> dao = OrmFactory.getDao(Student.class);

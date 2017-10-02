@@ -1,15 +1,19 @@
 package org.liaohailong.library.http;
 
+import android.text.TextUtils;
 import com.squareup.okhttp.Call;
 import com.squareup.okhttp.Callback;
 import com.squareup.okhttp.FormEncodingBuilder;
+import com.squareup.okhttp.Headers;
 import com.squareup.okhttp.OkHttpClient;
 import com.squareup.okhttp.Request;
 import com.squareup.okhttp.RequestBody;
 import com.squareup.okhttp.Response;
-
+import org.liaohailong.library.util.Utility;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 /**
  * 使用OKHttp做为请求网络任务体
@@ -17,8 +21,15 @@ import java.util.Map;
  */
 
 public class OKHttpWorker extends HttpWorker {
+    private static final String CONTENT_ENCODING = "Content-Encoding";
+    private static final String GZIP = "gzip";
 
-    private OkHttpClient client = new OkHttpClient();
+    private OkHttpClient client;
+
+    public OKHttpWorker() {
+        client = new OkHttpClient();
+        setParams(client);
+    }
 
     @Override
     public void request() {
@@ -51,7 +62,20 @@ public class OKHttpWorker extends HttpWorker {
 
                     @Override
                     public void onResponse(Response response) throws IOException {
-                        String result = response.body().toString();
+                        InputStream is = response.body().byteStream();
+                        // 注意这里 ↓
+                        Headers headers = response.headers();
+                        for (String name : headers.names()) {
+                            //获取内容编译类型
+                            if (TextUtils.equals(name,CONTENT_ENCODING)) {
+                                String value = headers.get(name);
+                                //内容编译类型为GZIP
+                                if (TextUtils.equals(value,GZIP)) {
+                                    is = new java.util.zip.GZIPInputStream(is);
+                                }
+                            }
+                        }
+                        String result = Utility.streamToString(is, "UTF-8");
                         onSuccess(url, result);
                     }
                 });
@@ -64,5 +88,12 @@ public class OKHttpWorker extends HttpWorker {
         builder.addHeader("Connection", "close");
         builder.addHeader("Charset", "UTF-8");
         builder.addHeader("Accept-Encoding", "gzip,deflate");
+    }
+
+    private static void setParams(OkHttpClient client) {
+        int timeout = getTimeout();
+        client.setWriteTimeout(timeout, TimeUnit.MILLISECONDS);
+        client.setReadTimeout(timeout, TimeUnit.MILLISECONDS);
+        client.setConnectTimeout(timeout, TimeUnit.MILLISECONDS);
     }
 }

@@ -11,8 +11,6 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 
 import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.HttpsURLConnection;
@@ -27,7 +25,6 @@ import javax.net.ssl.X509TrustManager;
  */
 
 public class HttpUrlConnectionWorker extends HttpWorker {
-    private static final int TIME_OUT = 1000 * 15;
     private static final String PROTOCOL_HTTP = "http";
     private static final String PROTOCOL_HTTPS = "https";
     private static final String UTF_8 = "UTF-8";
@@ -85,7 +82,7 @@ public class HttpUrlConnectionWorker extends HttpWorker {
                     response(url, code, result, success);
                 } catch (Exception ex) {
                     ex.printStackTrace();
-                    onFailure(getUrl(),"");
+                    onFailure(getUrl(), "");
                 } finally {
                     Utility.close(out);
                     Utility.close(is);
@@ -138,10 +135,6 @@ public class HttpUrlConnectionWorker extends HttpWorker {
         connection.setDoInput(true);
         connection.setReadTimeout(timeout);
         connection.setConnectTimeout(timeout);
-    }
-
-    private static int getTimeout() {
-        return TIME_OUT;
     }
 
     private static class TrustAllManager implements X509TrustManager {

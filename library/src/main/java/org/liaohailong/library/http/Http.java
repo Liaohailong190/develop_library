@@ -14,6 +14,7 @@ public class Http {
     //请求参数相关
     private String url;
     private Map<String, String> params = new HashMap<>();
+    private HttpWorker tempWorker;
 
     private Http() {
     }
@@ -43,10 +44,17 @@ public class Http {
         return this;
     }
 
+    public Http worker(HttpWorker httpWorker) {
+        tempWorker = httpWorker;
+        return this;
+    }
+
     public void execute(HttpCallback callback) {
-        HTTP_WORKER.setUrl(url);
-        HTTP_WORKER.setParams(params);
-        HTTP_WORKER.setCallback(callback);
-        HTTP_WORKER.request();
+        //动态切换任务执行者，如果用户设置的话
+        HttpWorker worker = tempWorker != null ? tempWorker : HTTP_WORKER;
+        worker.setUrl(url);
+        worker.setParams(params);
+        worker.setCallback(callback);
+        worker.request();
     }
 }

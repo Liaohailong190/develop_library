@@ -19,6 +19,7 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.FilenameFilter;
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.channels.FileChannel;
 import java.util.ArrayList;
 import java.util.List;
@@ -140,6 +141,26 @@ public class FileUtil {
     public static boolean createDirIfMissed(String dirPath) {
         File dir = new File(dirPath);
         return !dir.exists() && dir.mkdirs();
+    }
+
+    /**
+     * 创建文件（如果不存在）
+     *
+     * @param file 目标文件
+     */
+    public static void createFileIfMissed(File file) {
+        if (file.exists()) {
+            if (file.isDirectory()) {
+                boolean delete = file.delete();
+            }
+        }
+        if (!file.exists()) {
+            try {
+                boolean mkdir = file.createNewFile();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
     }
 
     /**
@@ -426,7 +447,7 @@ public class FileUtil {
      * 判断是否存在sdCard
      */
     public static boolean hasSdcard() {
-        if (Environment.getExternalStorageState().equals(Environment.MEDIA_MOUNTED)) {
+        if (android.os.Environment.getExternalStorageState().equals(android.os.Environment.MEDIA_MOUNTED)) {
             return true;
         }
         return false;
@@ -487,6 +508,49 @@ public class FileUtil {
             return filePath.substring(filePosi + 1);
         }
         return (filePosi < extenPosi ? filePath.substring(filePosi + 1, extenPosi) : filePath.substring(filePosi + 1));
+    }
+
+    /**
+     * 获取文件保存根目录路径
+     *
+     * @return
+     */
+    public synchronized static String getRootDirectory(String name) {
+        File directory = null;
+        final String state = Environment.getExternalStorageState();
+        switch (state) {
+            case Environment.MEDIA_SHARED:
+            case Environment.MEDIA_MOUNTED:
+                directory = Environment.getExternalStorageDirectory();
+                break;
+        }
+
+        if (directory == null) {
+            directory = Environment.getDataDirectory();
+        }
+
+        if (directory == null) {
+            return null;
+        }
+
+        String path = directory.getPath() + "/" + name + "/";
+        File file = new File(path);
+        if (!file.exists()) {
+            boolean mkdirs = file.mkdirs();
+            if (mkdirs) {
+                return path;
+            }
+        }
+        if (file.isFile()) {
+            boolean delete = file.delete();
+            if (delete) {
+                boolean mkdirs = file.mkdirs();
+                if (mkdirs) {
+                    return path;
+                }
+            }
+        }
+        return path;
     }
 
     /**
@@ -581,48 +645,27 @@ public class FileUtil {
         }
     }
 
-    public static byte[] file2byte(String filePath) {
-        byte[] buffer = null;
-        try {
-            File file = new File(filePath);
-            FileInputStream fis = new FileInputStream(file);
-            ByteArrayOutputStream bos = new ByteArrayOutputStream();
-            byte[] b = new byte[1024];
-            int n;
-            while ((n = fis.read(b)) != -1) {
-                bos.write(b, 0, n);
-            }
-            fis.close();
-            bos.close();
-            buffer = bos.toByteArray();
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
-        } catch (IOException e) {
-            e.printStackTrace();
+    /**
+     * 读取本地文件字符串数据
+     *
+     * @param path 文件路径
+     * @return 文件内字符串数据
+     */
+    public static String getStringFromFile(String path) {
+        File file = new File(path);
+        if (!file.exists()) {
+            return null;
         }
-        return buffer;
-    }
-
-    public static File byte2File(byte[] buf, String path) {
-        BufferedOutputStream bos = null;
-        FileOutputStream fos = null;
-        File file = null;
+        InputStream is = null;
         try {
-            File dir = new File(path);
-            if (!dir.exists() && dir.isDirectory()) {
-                boolean mkdirs = dir.mkdirs();
-            }
-            file = new File(path);
-            fos = new FileOutputStream(file);
-            bos = new BufferedOutputStream(fos);
-            bos.write(buf);
+            is = new FileInputStream(file);
+            return Utility.streamToString(is);
         } catch (Exception e) {
             e.printStackTrace();
         } finally {
-            Utility.close(bos);
-            Utility.close(fos);
+            Utility.close(is);
         }
-        return file;
+        return null;
     }
 }
 
