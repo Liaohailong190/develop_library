@@ -36,15 +36,8 @@ public class HttpUrlConnectionWorker extends HttpWorker {
     private static final String CONTENT_TYPE = "Content-Type";
     private static final String X_WWW_FORM_URL_ENCODE = "application/x-www-form-urlencoded";
     private static final String GZIP = "gzip";
-    //请求网络主体相关
-    private static final int CPU_COUNT = Runtime.getRuntime().availableProcessors();
-    private static final ExecutorService THREAD_POOL_EXECUTOR;
 
-    static {
-        THREAD_POOL_EXECUTOR = Executors.newFixedThreadPool(CPU_COUNT);
-    }
-
-    public void run() {
+    public void request() {
         onPreExecute();
         Runnable runnable = new Runnable() {
             @Override
@@ -92,7 +85,7 @@ public class HttpUrlConnectionWorker extends HttpWorker {
                     response(url, code, result, success);
                 } catch (Exception ex) {
                     ex.printStackTrace();
-                    onFailure(getUrl(), 400, "");
+                    onFailure(getUrl(),"");
                 } finally {
                     Utility.close(out);
                     Utility.close(is);

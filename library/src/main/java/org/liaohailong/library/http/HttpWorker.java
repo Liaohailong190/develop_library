@@ -7,6 +7,8 @@ import android.text.TextUtils;
 
 import java.net.URLEncoder;
 import java.util.Map;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 /**
  * Http请求任务规范
@@ -14,6 +16,14 @@ import java.util.Map;
  */
 
 public abstract class HttpWorker {
+    //请求网络主体相关
+    private static final int CPU_COUNT = Runtime.getRuntime().availableProcessors();
+    protected static final ExecutorService THREAD_POOL_EXECUTOR;
+
+    static {
+        THREAD_POOL_EXECUTOR = Executors.newFixedThreadPool(CPU_COUNT);
+    }
+
     private static final char PARAMETER_DELIMITER = '&';
     private static final char PARAMETER_EQUALS_CHAR = '=';
     private static final HttpHandler HANDLER = new HttpHandler();
@@ -41,6 +51,10 @@ public abstract class HttpWorker {
         return createQueryStringForParameters(params);
     }
 
+    protected Map<String, String> getParamMap() {
+        return params;
+    }
+
     public HttpCallback getCallback() {
         return callback;
     }
@@ -48,7 +62,7 @@ public abstract class HttpWorker {
     /**
      * 子类需要实现此方法，做请求网络的执行工作
      */
-    public abstract void run();
+    public abstract void request();
 
     /**
      * 任务执行前回调
@@ -64,11 +78,10 @@ public abstract class HttpWorker {
      * 用来激活回调
      *
      * @param url  请求网络的url
-     * @param code 请求状态码
      * @param data 请求返回数据
      */
-    protected void onSuccess(String url, int code, String data) {
-        response(url, code, data, true);
+    protected void onSuccess(String url, String data) {
+        response(url, HttpHandler.HTTP_OK, data, true);
     }
 
     /**
@@ -76,11 +89,10 @@ public abstract class HttpWorker {
      * 用来激活回调
      *
      * @param url  请求网络的url
-     * @param code 请求状态码
      * @param data 请求返回数据
      */
-    protected void onFailure(String url, int code, String data) {
-        response(url, code, data, false);
+    protected void onFailure(String url, String data) {
+        response(url, HttpHandler.HTTP_FAIL, data, false);
     }
 
     /**

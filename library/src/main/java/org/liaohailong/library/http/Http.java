@@ -10,7 +10,7 @@ import java.util.Map;
  */
 
 public class Http {
-    private static HttpWorker HTTP_WORKER = new HttpUrlConnectionWorker();
+    private static HttpWorker HTTP_WORKER = new OKHttpWorker();
     //请求参数相关
     private String url;
     private Map<String, String> params = new HashMap<>();
@@ -47,6 +47,6 @@ public class Http {
         HTTP_WORKER.setUrl(url);
         HTTP_WORKER.setParams(params);
         HTTP_WORKER.setCallback(callback);
-        HTTP_WORKER.run();
+        HTTP_WORKER.request();
     }
 }
