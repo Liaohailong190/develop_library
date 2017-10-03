@@ -1,6 +1,7 @@
 package org.liaohailong.library.http;
 
 import android.text.TextUtils;
+
 import com.squareup.okhttp.Call;
 import com.squareup.okhttp.Callback;
 import com.squareup.okhttp.FormEncodingBuilder;
@@ -9,7 +10,9 @@ import com.squareup.okhttp.OkHttpClient;
 import com.squareup.okhttp.Request;
 import com.squareup.okhttp.RequestBody;
 import com.squareup.okhttp.Response;
+
 import org.liaohailong.library.util.Utility;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Map;
@@ -51,6 +54,8 @@ public class OKHttpWorker extends HttpWorker {
                     }
                     RequestBody requestBody = formEncodingBuilder.build();
                     builder.post(requestBody);
+                } else {
+                    builder.get();
                 }
                 Request request = builder.build();
                 Call call = client.newCall(request);
@@ -67,10 +72,10 @@ public class OKHttpWorker extends HttpWorker {
                         Headers headers = response.headers();
                         for (String name : headers.names()) {
                             //获取内容编译类型
-                            if (TextUtils.equals(name,CONTENT_ENCODING)) {
+                            if (TextUtils.equals(name, CONTENT_ENCODING)) {
                                 String value = headers.get(name);
                                 //内容编译类型为GZIP
-                                if (TextUtils.equals(value,GZIP)) {
+                                if (TextUtils.equals(value, GZIP)) {
                                     is = new java.util.zip.GZIPInputStream(is);
                                 }
                             }

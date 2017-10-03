@@ -8,24 +8,32 @@ import android.os.Message;
 import android.support.annotation.NonNull;
 import android.text.TextUtils;
 
+import com.squareup.okhttp.Call;
+import com.squareup.okhttp.Callback;
+import com.squareup.okhttp.MultipartBuilder;
+import com.squareup.okhttp.OkHttpClient;
+import com.squareup.okhttp.Request;
+import com.squareup.okhttp.RequestBody;
+import com.squareup.okhttp.Response;
+import com.squareup.okhttp.ResponseBody;
+
 import org.liaohailong.library.RootApplication;
+import org.liaohailong.library.http.ProgressRequestBody;
 import org.liaohailong.library.util.FileUtil;
 import org.liaohailong.library.util.Md5Util;
 import org.liaohailong.library.util.Utility;
 
-import java.io.DataOutputStream;
 import java.io.File;
-import java.io.FileInputStream;
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.RandomAccessFile;
 import java.net.HttpURLConnection;
-import java.net.URL;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.UUID;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
 
 /**
  * 文件上传/下载
@@ -33,7 +41,7 @@ import java.util.concurrent.Future;
  */
 
 public class FileLoader {
-    private static final String NAME = "cache_files";
+    private static final String NAME = "victor";
     private static final int FILE_LOADING = 0;//视频下载中
     private static final int FILE_DOWN_LOAD_COMPLETE = 1;//文件下载完成
     private static final int FILE_UP_LOAD_COMPLETE = 2;//文件上传完成
@@ -43,6 +51,7 @@ public class FileLoader {
     private static final String TEMP = ".temp";
     private Map<String, OnFileStatusCallBack> callBackMap = new HashMap<>();
     private Map<String, Future<?>> taskMap = new HashMap<>();
+    private final OkHttpClient client;
     private final ExecutorService executor;
     private Handler handler = new Handler() {
         @Override
@@ -74,8 +83,18 @@ public class FileLoader {
 
     private FileLoader() {
         executor = Executors.newFixedThreadPool(THREAD_POOL_SIZE);
+        client = new OkHttpClient();
+        initClient();
         directory = FileUtil.getRootDirectory(NAME);
     }
+
+    //设置超时，不设置可能会报异常
+    private void initClient() {
+        client.setConnectTimeout(15, TimeUnit.MINUTES);
+        client.setReadTimeout(15, TimeUnit.MINUTES);
+        client.setWriteTimeout(15, TimeUnit.MINUTES);
+    }
+
 
     private static class SingletonHolder {
         static final FileLoader INSTANCE = new FileLoader();
@@ -95,7 +114,7 @@ public class FileLoader {
         directory = path;
     }
 
-    public boolean loadFile(String url, OnFileStatusCallBack callBack) {
+    public boolean downloadFile(String url, OnFileStatusCallBack callBack) {
         String path = getPath(url);
         boolean saved = canFromDisk(path);
         //命中本地缓存
@@ -115,10 +134,10 @@ public class FileLoader {
         return false;
     }
 
-    public void upLoadFile(String url, String fileKey, File file, OnFileStatusCallBack callBack) {
+    public void upLoadFile(String url, Map<String, Object> params, OnFileStatusCallBack callBack) {
         //网络上传
         if (taskMap.get(url) == null) {
-            UpLoadFileRunnable runnable = new UpLoadFileRunnable(url, fileKey, file);
+            UpLoadFileRunnable runnable = new UpLoadFileRunnable(url, params);
             callBackMap.put(url, callBack);
             Future<?> submit = executor.submit(runnable);
             taskMap.put(url, submit);
@@ -192,6 +211,33 @@ public class FileLoader {
         }
     }
 
+    private void onFileLoading(Status status) {
+        //正在下载
+        Message message = handler.obtainMessage();
+        message.what = FILE_LOADING;
+        message.obj = status;
+        message.sendToTarget();
+    }
+
+    private void onFileComplete(Status status) {
+        //视频下载完毕
+        Message message = handler.obtainMessage();
+        message.what = FILE_DOWN_LOAD_COMPLETE;
+        message.obj = status;
+        message.sendToTarget();
+    }
+
+    private void onFileLoadFailure(String url, String info) {
+        //下载失败
+        Status status = new Status();
+        status.result = info;
+        status.url = url;
+        Message message = handler.obtainMessage();
+        message.what = FILE_LOAD_FAILURE;
+        message.obj = status;
+        message.sendToTarget();
+    }
+
     /**
      * 下载网络视频
      */
@@ -204,117 +250,114 @@ public class FileLoader {
 
         @Override
         public void run() {
-            try {
-                HttpURLConnection urlConnection = (HttpURLConnection) new URL(url).openConnection();
-                urlConnection.setRequestMethod("GET");
-                urlConnection.setConnectTimeout(10 * 1000);
-                urlConnection.setRequestProperty("Accept-Encoding", "identity");
-                int responseCode = urlConnection.getResponseCode();
-                if (responseCode >= 200 && responseCode < 300) {
-                    int maxProgress = urlConnection.getContentLength();//获取文件
+            Request build = new Request.Builder()
+                    .url(url)
+                    .get()
+                    .build();
+            Call call = client.newCall(build);
+            call.enqueue(new Callback() {
+                @Override
+                public void onFailure(Request request, IOException e) {
+                    onFileLoadFailure(url, e.toString());
+                }
+
+                @Override
+                public void onResponse(Response response) throws IOException {
+                    if (!response.isSuccessful()) {
+                        return;
+                    }
+                    ResponseBody body = response.body();
+                    long contentLength = body.contentLength();
                     //检查用户是否已经删除了临时下载文件
                     String tempPath = getTempPath(url);
                     boolean loaded = isLoaded(tempPath);
                     if (!loaded) {
                         setFileLoadingSize(url, 0);
                     }
-                    int lastPosition = getFileLoadingSize(url);
-                    urlConnection.disconnect();
-                    downLoad(lastPosition, maxProgress);
-                } else {
-                    urlConnection.disconnect();
+                    long lastPosition = getFileLoadingSize(url);
+                    downLoad(lastPosition, contentLength);
+                    body.close();
                 }
-            } catch (Exception e) {
-                e.printStackTrace();
-                Status status = new Status();
-                status.result = e.toString();
-                status.url = url;
-                Message message = handler.obtainMessage();
-                message.what = FILE_LOAD_FAILURE;
-                message.obj = status;
-                message.sendToTarget();
-            }
+            });
         }
 
-        private void downLoad(int lastPosition, int maxLength) {
-            InputStream inputStream = null;
-            RandomAccessFile randomAccessFile = null;
-            Status status = null;
-            try {
-                HttpURLConnection urlConnection = (HttpURLConnection) new URL(url).openConnection();
-                urlConnection.setRequestMethod("GET");
-                urlConnection.setConnectTimeout(10 * 1000);
-                urlConnection.setRequestProperty("Accept-Encoding", "identity");
-                urlConnection.setRequestProperty("Accept-Ranges", "bytes");
-                urlConnection.setRequestProperty("Range", "bytes=" + lastPosition + "-" + maxLength);
-                int code = urlConnection.getResponseCode();
-                if (code >= HttpURLConnection.HTTP_BAD_REQUEST) {
-                    return;
+        private void downLoad(final long lastPosition, final long maxLength) {
+            Request build = new Request.Builder()
+                    .url(url)
+                    .addHeader("Accept-Encoding", "identity")//断点下载需要
+                    .addHeader("Accept-Ranges", "bytes")//断点下载需要
+                    .addHeader("Range", "bytes=" + lastPosition + "-" + maxLength)//断点下载需要
+                    .get()
+                    .build();
+            Call call = client.newCall(build);
+            call.enqueue(new Callback() {
+                @Override
+                public void onFailure(Request request, IOException e) {
+                    onFileLoadFailure(url, e.toString());
                 }
-                switch (code) {
-                    case HttpURLConnection.HTTP_PARTIAL://请求部分网络成功
-                        break;
-                    case HttpURLConnection.HTTP_OK://请求网络成功
-                        lastPosition = 0;//请求部分网络失败
-                        break;
-                }
-                inputStream = urlConnection.getInputStream();
-                String tempPath = getTempPath(url);
-                File file = new File(tempPath);
-                FileUtil.createFileIfMissed(file);
-                status = new Status();
-                randomAccessFile = new RandomAccessFile(file, "rwd");
-                randomAccessFile.seek(lastPosition);
-                byte[] buffer = new byte[1024 * 1024 * 2];
-                int len;
-                int total = 0;
-                while ((len = inputStream.read(buffer)) != -1) {
-                    total += len;
-                    randomAccessFile.write(buffer, 0, len);
-                    int progress = total + lastPosition;
-                    int percent = (int) (((progress * 1f) / (maxLength * 1f)) * 100f);
-                    //正在下载
-                    Message message = handler.obtainMessage();
-                    message.what = FILE_LOADING;
-                    status.url = url;
-                    status.tempPath = tempPath;
-                    status.progress = percent;
-                    message.obj = status;
-                    message.sendToTarget();
-                    //本地记录文件下载量
-                    setFileLoadingSize(url, progress);
-                    //手动打断线程执行
-                    boolean interrupted = Thread.interrupted();
-                    if (interrupted) {
+
+                @Override
+                public void onResponse(Response response) throws IOException {
+                    if (!response.isSuccessful()) {
                         return;
                     }
+                    int code = response.code();
+                    long lastPos = lastPosition;
+                    switch (code) {
+                        case HttpURLConnection.HTTP_PARTIAL://请求部分网络成功
+                            break;
+                        case HttpURLConnection.HTTP_OK://请求网络成功
+                            lastPos = 0;//请求部分网络失败
+                            break;
+                    }
+                    ResponseBody body = response.body();
+                    InputStream inputStream = null;
+                    RandomAccessFile randomAccessFile = null;
+                    try {
+                        inputStream = body.byteStream();
+                        String tempPath = getTempPath(url);
+                        File file = new File(tempPath);
+                        FileUtil.createFileIfMissed(file);
+                        Status status = new Status();
+                        randomAccessFile = new RandomAccessFile(file, "rwd");
+                        randomAccessFile.seek(lastPos);
+                        byte[] buffer = new byte[1024 * 1024 * 2];
+                        int len;
+                        long total = 0;
+                        while ((len = inputStream.read(buffer)) != -1) {
+                            total += len;
+                            randomAccessFile.write(buffer, 0, len);
+                            long progress = total + lastPos;
+                            int percent = (int) (((progress * 1f) / (maxLength * 1f)) * 100f);
+                            status.url = url;
+                            status.tempPath = tempPath;
+                            status.progress = percent;
+                            onFileLoading(status);
+                            //本地记录文件下载量
+                            setFileLoadingSize(url, progress);
+                            //手动打断线程执行
+                            boolean interrupted = Thread.interrupted();
+                            if (interrupted) {
+                                return;
+                            }
+                        }
+                        String path = getPath(url);
+                        FileUtil.renameTo(file, new File(path));
+                        //视频下载完毕
+                        status.url = url;
+                        status.progress = 100;
+                        status.path = path;
+                        onFileComplete(status);
+                        body.close();
+                    } catch (Exception ex) {
+                        ex.printStackTrace();
+                    } finally {
+                        Utility.close(inputStream);
+                        Utility.close(randomAccessFile);
+                        body.close();
+                    }
                 }
-                String path = getPath(url);
-                FileUtil.renameTo(file, new File(path));
-                //视频下载完毕
-                Message message = handler.obtainMessage();
-                message.what = FILE_DOWN_LOAD_COMPLETE;
-                status.url = url;
-                status.progress = 100;
-                status.path = path;
-                message.obj = status;
-                message.sendToTarget();
-                urlConnection.disconnect();
-            } catch (Exception e) {
-                e.printStackTrace();
-                if (status == null) {
-                    status = new Status();
-                }
-                status.result = e.toString();
-                status.url = url;
-                Message message = handler.obtainMessage();
-                message.what = FILE_LOAD_FAILURE;
-                message.obj = status;
-                message.sendToTarget();
-            } finally {
-                Utility.close(inputStream);
-                Utility.close(randomAccessFile);
-            }
+            });
         }
     }
 
@@ -323,113 +366,72 @@ public class FileLoader {
      */
     private class UpLoadFileRunnable implements Runnable {
         private String uploadUrl = "";
-        private File file = null;
-        private String key = "";
+        private Map<String, Object> params;
 
-        private UpLoadFileRunnable(@NonNull String uploadUrl, @NonNull String key, @NonNull File file) {
+        private UpLoadFileRunnable(@NonNull String uploadUrl, @NonNull Map<String, Object> params) {
             this.uploadUrl = uploadUrl;
-            this.file = file;
-            this.key = key;
+            this.params = params;
         }
 
         @Override
         public void run() {
-            DataOutputStream dos = null;
-            InputStream is = null;
-            Status status = null;
-            try {
-                String end = "\r\n";
-                String twoHyphens = "--";
-                String boundary = UUID.randomUUID().toString(); // 边界标识 随机生成
-                String CONTENT_TYPE = "multipart/form-data"; // 内容类型
-                URL url = new URL(uploadUrl);
-                HttpURLConnection httpURLConnection = (HttpURLConnection) url
-                        .openConnection();
-                httpURLConnection.setConnectTimeout(10 * 1000);
-                httpURLConnection.setReadTimeout(10 * 1000);
-                httpURLConnection.setChunkedStreamingMode(128 * 1024);// 128K
-                // 允许输入输出流
-                httpURLConnection.setDoInput(true);// 允许输入流
-                httpURLConnection.setDoOutput(true);// 允许输出流
-                httpURLConnection.setUseCaches(false);// 不允许使用缓存
-                // 使用POST方法
-                httpURLConnection.setRequestMethod("POST");// 请求方式
-                httpURLConnection.setRequestProperty("Connection", "Keep-Alive");
-                httpURLConnection.setRequestProperty("Charset", "UTF-8");// 设置编码
-                httpURLConnection.setRequestProperty("Content-Type",
-                        CONTENT_TYPE + ";boundary=" + boundary);
-
-                dos = new DataOutputStream(
-                        httpURLConnection.getOutputStream());
-                dos.writeBytes(twoHyphens + boundary + end);
-                /*
-                 * 这里重点注意： name里面的值为服务器端需要key 只有这个key 才可以得到对应的文件
-                 * filename是文件的名字，包含后缀名
-                 */
-                dos.writeBytes("Content-Disposition: form-data; name=\"" + key + "\"; filename=\""
-                        + file.getName() + "\"" + end);
-                dos.writeBytes(end);
-
-                status = new Status();
-                FileInputStream fis = new FileInputStream(file);
-                long length = file.length();
-                int outLength = 0;
-                byte[] buffer = new byte[8192]; // 8k
-                int count;
-                // 读取文件
-                while ((count = fis.read(buffer)) != -1) {
-                    dos.write(buffer, 0, count);
-                    outLength += count;
-                    int percent = (int) ((outLength / length) * 100);
-                    //正在上传
-                    Message message = handler.obtainMessage();
-                    message.what = FILE_LOADING;
-                    status.url = uploadUrl;
-                    status.progress = percent;
-                    message.obj = status;
-                    message.sendToTarget();
-                    //手动打断线程执行
-                    boolean interrupted = Thread.interrupted();
-                    if (interrupted) {
-                        return;
-                    }
-                }
-                fis.close();
-                dos.writeBytes(end);
-                dos.writeBytes(twoHyphens + boundary + twoHyphens + end);
-                dos.flush();
-                int code = httpURLConnection.getResponseCode();
-                if (code < 400) {
-                    is = httpURLConnection.getInputStream();
-                } else {
-                    is = httpURLConnection.getErrorStream();
-                }
-                String result = Utility.streamToString(is);
-                //上传完毕
-                Message message = handler.obtainMessage();
-                message.what = FILE_UP_LOAD_COMPLETE;
-                status.url = uploadUrl;
-                status.progress = 100;
-                status.result = result;
-                message.obj = status;
-                message.sendToTarget();
-                dos.close();
-                is.close();
-            } catch (Exception e) {
-                e.printStackTrace();
-                if (status == null) {
-                    status = new Status();
-                }
-                status.result = e.toString();
-                status.url = uploadUrl;
-                Message message = handler.obtainMessage();
-                message.what = FILE_LOAD_FAILURE;
-                message.obj = status;
-                message.sendToTarget();
-            } finally {
-                Utility.close(dos);
-                Utility.close(is);
+            if (TextUtils.isEmpty(uploadUrl) || params == null || params.isEmpty()) {
+                return;
             }
+            MultipartBuilder builder = new MultipartBuilder();
+            builder.type(MultipartBuilder.FORM);
+            //追加参数
+            for (Map.Entry<String, Object> entry : params.entrySet()) {
+                String key = entry.getKey();
+                Object value = entry.getValue();
+                if (value instanceof File) {
+                    File file = (File) value;
+                    builder.addFormDataPart(key, file.getName(), RequestBody.create(null, file));
+                } else {
+                    builder.addFormDataPart(key, value.toString());
+                }
+            }
+            RequestBody body = builder.build();
+            //上传文件进度监听
+            ProgressRequestBody.OnProgressCallback onProgressCallback = new ProgressRequestBody.OnProgressCallback() {
+                Status status = null;
+
+                @Override
+                public void onProgress(int progress) {
+                    if (status == null) {
+                        status = new Status();
+                    }
+                    //正在上传
+                    status.url = uploadUrl;
+                    status.tempPath = "";
+                    status.progress = progress;
+                    onFileLoading(status);
+                }
+            };
+            body = new ProgressRequestBody(body, onProgressCallback);
+            Request request = new Request.Builder()
+                    .url(uploadUrl)
+                    .post(body)
+                    .build();
+            Call call = client.newCall(request);
+            call.enqueue(new Callback() {
+                Status status = null;
+
+                @Override
+                public void onFailure(Request request, IOException e) {
+                    onFileLoadFailure(uploadUrl, e.toString());
+                }
+
+                @Override
+                public void onResponse(Response response) throws IOException {
+                    String result = response.body().string();
+                    //上传完毕
+                    status.url = uploadUrl;
+                    status.progress = 100;
+                    status.result = result;
+                    onFileComplete(status);
+                }
+            });
         }
     }
 
@@ -488,15 +490,15 @@ public class FileLoader {
      * @param url  文件下载链接（标识）
      * @param size 文件已下载大小
      */
-    private static synchronized void setFileLoadingSize(String url, int size) {
-        sp.edit().putInt(url, size).apply();
+    private static synchronized void setFileLoadingSize(String url, long size) {
+        sp.edit().putLong(url, size).apply();
     }
 
     /**
      * @param url 文件下载链接（标识）
      * @return 文件已下载大小
      */
-    private static synchronized int getFileLoadingSize(String url) {
-        return sp.getInt(url, 0);
+    private static synchronized long getFileLoadingSize(String url) {
+        return sp.getLong(url, 0);
     }
 }
