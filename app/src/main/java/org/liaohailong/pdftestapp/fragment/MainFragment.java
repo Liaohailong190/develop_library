@@ -12,10 +12,9 @@ import org.liaohailong.library.async.Async;
 import org.liaohailong.library.async.Mouse;
 import org.liaohailong.library.async.Schedulers;
 import org.liaohailong.library.db.OrmDao;
-import org.liaohailong.library.db.OrmFactory;
+import org.liaohailong.library.db.Orm;
 import org.liaohailong.library.http.Http;
 import org.liaohailong.library.http.HttpCallback;
-import org.liaohailong.library.http.HttpUrlConnectionWorker;
 import org.liaohailong.library.http.OKHttpWorker;
 import org.liaohailong.library.image.ImageLoader;
 import org.liaohailong.library.inject.BindContentView;
@@ -53,33 +52,32 @@ public class MainFragment extends BaseFragment {
     private String imageUrl03 = "https://timgsa.baidu.com/timg?image&quality=80&size=b9999_10000&sec=1505106699538&di=6e7649394fca8898968dd0a1388c9b76&imgtype=0&src=http%3A%2F%2Fimg.mp.itc.cn%2Fupload%2F20160829%2F24997e71d5814cf48f307d7caece946c.gif";
 
     private int httpRequestIndex = 0;
+    private Mouse<String> mouse = new Mouse<String>() {
+        @Override
+        public String run() {
+            String text = "";
+            try {
+                HttpURLConnection urlConnection = (HttpURLConnection) new URL("https://www.baidu.com/").openConnection();
+                int code = urlConnection.getResponseCode();
+                text = "code = " + code;
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            return text;
+        }
+    };
 
     @Override
     public void onViewCreated(View view, @Nullable Bundle savedInstanceState) {
-        new Async<String>()
-                .watch(new Mouse<String>() {
-                    @Override
-                    public String run() {
-                        String text = "";
-                        try {
-                            HttpURLConnection urlConnection = (HttpURLConnection) new URL("https://www.baidu.com/").openConnection();
-                            int code = urlConnection.getResponseCode();
-                            text = "code = " + code;
-                        } catch (IOException e) {
-                            e.printStackTrace();
-                        }
-                        return text;
-                    }
-                })
-                .by(new Cat<String>() {
+        Async.create(mouse)
+                .mouseOn(Schedulers.IO_THREAD)
+                .catOn(Schedulers.UI_THREAD)
+                .subscribe(new Cat<String>() {
                     @Override
                     public void chase(String s) {
                         textView.setText(s);
                     }
-                })
-                .mouseOn(Schedulers.IO_THREAD)
-                .catOn(Schedulers.UI_THREAD)
-                .start();
+                });
         httpRequestIndex = 0;
         for (int i = 0; i < 20; i++) {
             Http.create().url("https://www.baidu.com/")
@@ -98,7 +96,7 @@ public class MainFragment extends BaseFragment {
                     });
         }
 
-        OrmDao<Student> dao = OrmFactory.getDao(Student.class);
+        OrmDao<Student> dao = Orm.create(Student.class);
         dao.save(new Student("小明", 1, 18));
         dao.save(new Student("小红", 0, 17));
         dao.save(new Student("小芳", 0, 16));

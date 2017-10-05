@@ -55,6 +55,7 @@ public class Http {
         worker.setUrl(url);
         worker.setParams(params);
         worker.setCallback(callback);
+        worker.onPreExecute();
         worker.request();
     }
 }

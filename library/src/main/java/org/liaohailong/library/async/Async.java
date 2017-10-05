@@ -2,6 +2,7 @@ package org.liaohailong.library.async;
 
 import android.os.Handler;
 import android.os.Message;
+import android.support.annotation.NonNull;
 
 import java.lang.ref.WeakReference;
 import java.util.HashSet;
@@ -22,12 +23,22 @@ public class Async<Result> {
     private Mouse<Result> mouse;
     private Cat<Result> cat;
 
-    public Async<Result> by(Cat<Result> cat) {
-        this.cat = cat;
-        return this;
+    public static <T> Async<T> create(@NonNull Mouse<T> mouse) {
+        Async<T> async = new Async<>();
+        async.watch(mouse);
+        return async;
     }
 
-    public Async<Result> watch(Mouse<Result> mouse) {
+    private Async() {
+
+    }
+
+    public void subscribe(@NonNull Cat<Result> cat) {
+        this.cat = cat;
+        start();
+    }
+
+    private Async<Result> watch(Mouse<Result> mouse) {
         this.mouse = mouse;
         return this;
     }
@@ -52,7 +63,7 @@ public class Async<Result> {
         return this;
     }
 
-    public void start() {
+    private void start() {
         Cage<Result> cage = new Cage<>(mouse, cat, null);
         Result result = mouseTime(cage);
         cage.setResult(result);

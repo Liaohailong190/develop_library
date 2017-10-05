@@ -5,12 +5,12 @@ package org.liaohailong.library.db;
  * Created by LHL on 2017/9/24.
  */
 
-public class OrmFactory {
-    private OrmFactory() {
+public class Orm {
+    private Orm() {
 
     }
 
-    public static synchronized <T> OrmDao<T> getDao(Class<T> tClass) {
+    public static synchronized <T> OrmDao<T> create(Class<T> tClass) {
         return new OrmDao<>(tClass);
     }
 

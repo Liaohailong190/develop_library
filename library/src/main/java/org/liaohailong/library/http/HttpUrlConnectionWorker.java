@@ -35,7 +35,6 @@ public class HttpUrlConnectionWorker extends HttpWorker {
     private static final String GZIP = "gzip";
 
     public void request() {
-        onPreExecute();
         Runnable runnable = new Runnable() {
             @Override
             public void run() {
