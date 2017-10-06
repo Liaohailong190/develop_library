@@ -7,16 +7,14 @@ import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.bumptech.glide.request.RequestOptions;
+
 import org.liaohailong.library.async.Cat;
 import org.liaohailong.library.async.Async;
 import org.liaohailong.library.async.Mouse;
 import org.liaohailong.library.async.Schedulers;
 import org.liaohailong.library.db.OrmDao;
 import org.liaohailong.library.db.Orm;
-import org.liaohailong.library.http.Http;
-import org.liaohailong.library.http.HttpCallback;
-import org.liaohailong.library.http.OKHttpWorker;
-import org.liaohailong.library.image.ImageLoader;
 import org.liaohailong.library.inject.BindContentView;
 import org.liaohailong.library.inject.OnClick;
 import org.liaohailong.library.inject.BindView;
@@ -25,6 +23,9 @@ import org.liaohailong.pdftestapp.BaseFragment;
 import org.liaohailong.pdftestapp.JNI;
 import org.liaohailong.pdftestapp.R;
 import org.liaohailong.pdftestapp.model.Student;
+import org.liaohailong.pdftestapp.widget.glide.CircleTransform;
+import org.liaohailong.pdftestapp.widget.glide.GlideApp;
+import org.liaohailong.pdftestapp.widget.glide.GlideUtil;
 
 import java.io.IOException;
 import java.net.HttpURLConnection;
@@ -50,7 +51,8 @@ public class MainFragment extends BaseFragment {
     private String imageUrl01 = "https://timgsa.baidu.com/timg?image&quality=80&size=b9999_10000&sec=1505054331352&di=67367353f3ac52e7cdaca7221de9c39d&imgtype=0&src=http%3A%2F%2Fimg.mp.itc.cn%2Fupload%2F20161003%2F599d93c935d646b9a1b7e8adb049a8fa_th.jpg";
     private String imageUrl02 = "/storage/emulated/0/output_image.jpg";
     private String imageUrl03 = "https://timgsa.baidu.com/timg?image&quality=80&size=b9999_10000&sec=1505106699538&di=6e7649394fca8898968dd0a1388c9b76&imgtype=0&src=http%3A%2F%2Fimg.mp.itc.cn%2Fupload%2F20160829%2F24997e71d5814cf48f307d7caece946c.gif";
-
+    private String[] urls = new String[3];
+    private int imageUrlIndex = 0;
     private int httpRequestIndex = 0;
     private Mouse<String> mouse = new Mouse<String>() {
         @Override
@@ -79,22 +81,22 @@ public class MainFragment extends BaseFragment {
                     }
                 });
         httpRequestIndex = 0;
-        for (int i = 0; i < 20; i++) {
-            Http.create().url("https://www.baidu.com/")
-                    .worker(new OKHttpWorker())
-                    .execute(new HttpCallback<String>() {
-                        @Override
-                        public void onSuccess(String result) {
-                            httpRequestIndex++;
-                            Toast.makeText(getContext(), "Http请求成功 i = " + httpRequestIndex + "  result = " + result, Toast.LENGTH_SHORT).show();
-                        }
-
-                        @Override
-                        public void onFailure(int code, String info) {
-
-                        }
-                    });
-        }
+//        for (int i = 0; i < 20; i++) {
+//            Http.create().url("https://www.baidu.com/")
+//                    .worker(new OKHttpWorker())
+//                    .execute(new HttpCallback<String>() {
+//                        @Override
+//                        public void onSuccess(String result) {
+//                            httpRequestIndex++;
+//                            Toast.makeText(getContext(), "Http请求成功 i = " + httpRequestIndex + "  result = " + result, Toast.LENGTH_SHORT).show();
+//                        }
+//
+//                        @Override
+//                        public void onFailure(int code, String info) {
+//
+//                        }
+//                    });
+//        }
 
         OrmDao<Student> dao = Orm.create(Student.class);
         dao.save(new Student("小明", 1, 18));
@@ -103,6 +105,10 @@ public class MainFragment extends BaseFragment {
 
         List<Student> students = dao.queryAll();
         students.clear();
+
+        urls[0] = imageUrl01;
+        urls[1] = imageUrl02;
+        urls[2] = imageUrl03;
     }
 
     @OnClick({R.id.text_fragment})
@@ -125,14 +131,12 @@ public class MainFragment extends BaseFragment {
 
     @OnClick(R.id.avatar)
     private void showImage(View view) {
-        Object tag = avatar.getTag();
-        if (tag == null) {
-            ImageLoader.getInstance().setImage(avatar, imageUrl03);
-            avatar.setTag(true);
-            return;
-        }
-        boolean isUrl = (boolean) tag;
-        ImageLoader.getInstance().setImage(avatar, isUrl ? imageUrl02 : imageUrl01, R.drawable.eee_drawable);
-        avatar.setTag(!isUrl);
+        String url = urls[imageUrlIndex % urls.length];
+        imageUrlIndex++;
+        GlideUtil.with(this).clear(avatar);
+        GlideUtil.with(this)
+                .load(url)
+                .apply(new RequestOptions().transform(new CircleTransform()))
+                .into(avatar);
     }
 }

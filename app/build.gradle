@@ -32,8 +32,9 @@ dependencies {
     compile 'com.android.support.constraint:constraint-layout:1.0.2'
     testCompile 'junit:junit:4.12'
     compile project(':library')
-    //目前最好用的图片处理库
-    compile 'com.github.bumptech.glide:glide:3.7.0'
     //pdf相关
     compile 'com.github.barteksc:pdfium-android:1.7.0'
+    //glide相关
+    compile 'com.github.bumptech.glide:glide:4.0.0-RC1'
+    annotationProcessor 'com.github.bumptech.glide:compiler:4.0.0-RC1'
 }

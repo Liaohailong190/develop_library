@@ -12,7 +12,6 @@ import android.util.Log;
 import android.widget.ImageView;
 
 import org.liaohailong.library.RootApplication;
-import org.liaohailong.library.http.Http;
 import org.liaohailong.library.util.Md5Util;
 import org.liaohailong.library.util.Utility;
 

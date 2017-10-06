@@ -6,5 +6,9 @@ package org.liaohailong.library.async;
  */
 
 public abstract class Mouse<Result> extends Pet {
+    public Mouse() {
+        setThread(Schedulers.IO_THREAD);
+    }
+
     public abstract Result run();
 }
