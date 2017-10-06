@@ -14,8 +14,8 @@ import com.bumptech.glide.RequestManager;
  * Created by LHL on 2017/10/6.
  */
 
-public class GlideUtil {
-    private GlideUtil() {
+public class GlideLoader {
+    private GlideLoader() {
 
     }
 

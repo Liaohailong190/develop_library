@@ -7,14 +7,15 @@ import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.bumptech.glide.request.RequestOptions;
-
 import org.liaohailong.library.async.Cat;
 import org.liaohailong.library.async.Async;
 import org.liaohailong.library.async.Mouse;
 import org.liaohailong.library.async.Schedulers;
 import org.liaohailong.library.db.OrmDao;
 import org.liaohailong.library.db.Orm;
+import org.liaohailong.library.http.Http;
+import org.liaohailong.library.http.HttpCallback;
+import org.liaohailong.library.http.OKHttpWorker;
 import org.liaohailong.library.inject.BindContentView;
 import org.liaohailong.library.inject.OnClick;
 import org.liaohailong.library.inject.BindView;
@@ -23,8 +24,7 @@ import org.liaohailong.pdftestapp.BaseFragment;
 import org.liaohailong.pdftestapp.JNI;
 import org.liaohailong.pdftestapp.R;
 import org.liaohailong.pdftestapp.model.Student;
-import org.liaohailong.pdftestapp.widget.glide.CircleTransform;
-import org.liaohailong.pdftestapp.widget.glide.GlideUtil;
+import org.liaohailong.pdftestapp.widget.glide.GlideLoader;
 
 import java.io.IOException;
 import java.net.HttpURLConnection;
@@ -80,22 +80,22 @@ public class MainFragment extends BaseFragment {
                     }
                 });
         httpRequestIndex = 0;
-//        for (int i = 0; i < 20; i++) {
-//            Http.create().url("https://www.baidu.com/")
-//                    .worker(new OKHttpWorker())
-//                    .execute(new HttpCallback<String>() {
-//                        @Override
-//                        public void onSuccess(String result) {
-//                            httpRequestIndex++;
-//                            Toast.makeText(getContext(), "Http请求成功 i = " + httpRequestIndex + "  result = " + result, Toast.LENGTH_SHORT).show();
-//                        }
-//
-//                        @Override
-//                        public void onFailure(int code, String info) {
-//
-//                        }
-//                    });
-//        }
+        for (int i = 0; i < 20; i++) {
+            Http.create().url("https://www.baidu.com/")
+                    .worker(new OKHttpWorker())
+                    .execute(new HttpCallback<String>() {
+                        @Override
+                        public void onSuccess(String result) {
+                            httpRequestIndex++;
+                            Toast.makeText(getContext(), "Http请求成功 i = " + httpRequestIndex + "  result = " + result, Toast.LENGTH_SHORT).show();
+                        }
+
+                        @Override
+                        public void onFailure(int code, String info) {
+
+                        }
+                    });
+        }
 
         OrmDao<Student> dao = Orm.create(Student.class);
         dao.save(new Student("小明", 1, 18));
@@ -132,10 +132,10 @@ public class MainFragment extends BaseFragment {
     private void showImage(View view) {
         String url = urls[imageUrlIndex % urls.length];
         imageUrlIndex++;
-        GlideUtil.with(this).clear(avatar);
-        GlideUtil.with(this)
+        GlideLoader.with(this).clear(avatar);
+        GlideLoader.with(this)
                 .load(url)
-                .apply(new RequestOptions().transform(new CircleTransform()))
+//                .apply(new RequestOptions().transform(new CircleTransform()))//裁剪为圆形图
                 .into(avatar);
     }
 }
