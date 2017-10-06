@@ -7,6 +7,8 @@ import android.support.annotation.NonNull;
 import android.support.v4.app.FragmentActivity;
 import android.view.View;
 
+import com.bumptech.glide.RequestManager;
+
 /**
  * Glide工具类
  * Created by LHL on 2017/10/6.
@@ -17,7 +19,7 @@ public class GlideUtil {
 
     }
 
-    public static GlideRequests with(@NonNull Object object) {
+    public static RequestManager with(@NonNull Object object) {
         GlideRequests requests = null;
         if (object instanceof FragmentActivity) {
             FragmentActivity param = (FragmentActivity) object;

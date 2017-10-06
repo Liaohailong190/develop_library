@@ -24,7 +24,6 @@ import org.liaohailong.pdftestapp.JNI;
 import org.liaohailong.pdftestapp.R;
 import org.liaohailong.pdftestapp.model.Student;
 import org.liaohailong.pdftestapp.widget.glide.CircleTransform;
-import org.liaohailong.pdftestapp.widget.glide.GlideApp;
 import org.liaohailong.pdftestapp.widget.glide.GlideUtil;
 
 import java.io.IOException;
