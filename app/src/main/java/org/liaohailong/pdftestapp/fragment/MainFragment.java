@@ -20,6 +20,7 @@ import org.liaohailong.library.inject.BindContentView;
 import org.liaohailong.library.inject.OnClick;
 import org.liaohailong.library.inject.BindView;
 import org.liaohailong.library.inject.SaveState;
+import org.liaohailong.library.util.ToastUtil;
 import org.liaohailong.pdftestapp.BaseFragment;
 import org.liaohailong.pdftestapp.R;
 import org.liaohailong.pdftestapp.model.Student;
@@ -86,7 +87,7 @@ public class MainFragment extends BaseFragment {
                         @Override
                         public void onSuccess(String result) {
                             httpRequestIndex++;
-                            Toast.makeText(getContext(), "Http请求成功 i = " + httpRequestIndex + "  result = " + result, Toast.LENGTH_SHORT).show();
+                            ToastUtil.show("Http请求成功 i = " + httpRequestIndex + "  result = " + result);
                         }
 
                         @Override
