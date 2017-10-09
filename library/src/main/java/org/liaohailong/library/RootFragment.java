@@ -7,6 +7,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
+import org.liaohailong.library.http.Http;
 import org.liaohailong.library.inject.Victor;
 
 /**
@@ -26,5 +27,11 @@ public class RootFragment extends Fragment {
     public void onSaveInstanceState(Bundle outState) {
         super.onSaveInstanceState(outState);
         Victor.getSaveState(this, outState);
+    }
+
+    @Override
+    public void onDestroyView() {
+        super.onDestroyView();
+        Http.clearTask(null);
     }
 }

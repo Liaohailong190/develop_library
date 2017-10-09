@@ -3,6 +3,7 @@ package org.liaohailong.library.http;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.Future;
 
 /**
  * 请求网络工具类
@@ -56,6 +57,13 @@ public class Http {
         worker.setParams(params);
         worker.setCallback(callback);
         worker.onPreExecute();
-        worker.request();
+        worker.start();
+    }
+
+    /**
+     * @param future 需要停止的任务
+     */
+    public static void clearTask(Future future) {
+        HttpWorker.clear(future);
     }
 }

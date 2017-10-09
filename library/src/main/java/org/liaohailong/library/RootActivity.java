@@ -5,6 +5,7 @@ import android.os.PersistableBundle;
 import android.support.annotation.Nullable;
 import android.support.v7.app.AppCompatActivity;
 
+import org.liaohailong.library.http.Http;
 import org.liaohailong.library.image.ImageLoader;
 import org.liaohailong.library.inject.Victor;
 
@@ -30,5 +31,6 @@ public class RootActivity extends AppCompatActivity {
     protected void onDestroy() {
         super.onDestroy();
         ImageLoader.getInstance().clear();
+        Http.clearTask(null);
     }
 }

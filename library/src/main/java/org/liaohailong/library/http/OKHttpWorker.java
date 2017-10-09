@@ -16,6 +16,7 @@ import org.liaohailong.library.util.Utility;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Map;
+import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -35,7 +36,7 @@ public class OKHttpWorker extends HttpWorker {
     }
 
     @Override
-    public void request() {
+    public Future request() {
         Runnable runnable = new Runnable() {
             @Override
             public void run() {
@@ -86,7 +87,7 @@ public class OKHttpWorker extends HttpWorker {
                 });
             }
         };
-        THREAD_POOL_EXECUTOR.execute(runnable);
+        return THREAD_POOL_EXECUTOR.submit(runnable);
     }
 
     private static void setHeaders(Request.Builder builder) {

@@ -21,7 +21,6 @@ import org.liaohailong.library.inject.OnClick;
 import org.liaohailong.library.inject.BindView;
 import org.liaohailong.library.inject.SaveState;
 import org.liaohailong.pdftestapp.BaseFragment;
-import org.liaohailong.pdftestapp.JNI;
 import org.liaohailong.pdftestapp.R;
 import org.liaohailong.pdftestapp.model.Student;
 import org.liaohailong.pdftestapp.widget.glide.GlideLoader;
@@ -80,7 +79,7 @@ public class MainFragment extends BaseFragment {
                     }
                 });
         httpRequestIndex = 0;
-        for (int i = 0; i < 20; i++) {
+        for (int i = 0; i < 100; i++) {
             Http.create().url("https://www.baidu.com/")
                     .worker(new OKHttpWorker())
                     .execute(new HttpCallback<String>() {
@@ -122,10 +121,7 @@ public class MainFragment extends BaseFragment {
 
     @OnClick(R.id.jni_btn)
     private void showJni(View v) {
-        String getHelloWord = JNI.getHelloWord();
-        int addCalc = JNI.addCalc(1, 2);
-        String toast = "getHelloWord = " + getHelloWord + " addCalc = " + addCalc;
-        Toast.makeText(v.getContext(), toast, Toast.LENGTH_LONG).show();
+        Toast.makeText(v.getContext(), "没有了", Toast.LENGTH_LONG).show();
     }
 
     @OnClick(R.id.avatar)

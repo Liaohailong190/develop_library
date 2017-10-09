@@ -11,6 +11,7 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
+import java.util.concurrent.Future;
 
 import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.HttpsURLConnection;
@@ -34,7 +35,7 @@ public class HttpUrlConnectionWorker extends HttpWorker {
     private static final String X_WWW_FORM_URL_ENCODE = "application/x-www-form-urlencoded";
     private static final String GZIP = "gzip";
 
-    public void request() {
+    public Future request() {
         Runnable runnable = new Runnable() {
             @Override
             public void run() {
@@ -88,7 +89,7 @@ public class HttpUrlConnectionWorker extends HttpWorker {
                 }
             }
         };
-        THREAD_POOL_EXECUTOR.execute(runnable);
+        return THREAD_POOL_EXECUTOR.submit(runnable);
     }
 
     private HttpURLConnection openConnection(String url) throws Exception {

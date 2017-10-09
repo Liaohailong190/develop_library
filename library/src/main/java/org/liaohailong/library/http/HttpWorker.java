@@ -4,11 +4,18 @@ package org.liaohailong.library.http;
 import android.os.Handler;
 import android.os.Message;
 import android.text.TextUtils;
+import android.util.Log;
 
 import java.net.URLEncoder;
+import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.ThreadPoolExecutor;
 
 /**
  * Http请求任务规范
@@ -20,10 +27,11 @@ public abstract class HttpWorker {
     private static final int TIME_OUT = 1000 * 15;
     //请求网络主体相关
     private static final int CPU_COUNT = Runtime.getRuntime().availableProcessors();
-    protected static final ExecutorService THREAD_POOL_EXECUTOR;
+    protected static final ThreadPoolExecutor THREAD_POOL_EXECUTOR;
+    private static final Set<Future> SUBMIT = new HashSet<>();
 
     static {
-        THREAD_POOL_EXECUTOR = Executors.newFixedThreadPool(CPU_COUNT);
+        THREAD_POOL_EXECUTOR = (ThreadPoolExecutor) Executors.newFixedThreadPool(CPU_COUNT);
     }
 
     private static final char PARAMETER_DELIMITER = '&';
@@ -68,7 +76,35 @@ public abstract class HttpWorker {
     /**
      * 子类需要实现此方法，做请求网络的执行工作
      */
-    public abstract void request();
+    protected abstract Future request();
+
+    /**
+     * 开始请求任务
+     */
+    public void start() {
+        Future request = request();
+        SUBMIT.add(request);
+    }
+
+    /**
+     * 清除请求任务
+     *
+     * @param future 已请求任务的返回对象
+     */
+    public static void clear(Future future) {
+        //参数为null表示清楚当前所有任务（执行中+队列中）
+        if (future == null) {
+            for (Future submit : SUBMIT) {
+                boolean cancel = submit.cancel(true);
+            }
+            SUBMIT.clear();
+        } else {
+            if (SUBMIT.contains(future)) {
+                boolean cancel = future.cancel(true);
+            }
+            SUBMIT.remove(future);
+        }
+    }
 
     /**
      * 任务执行前回调
