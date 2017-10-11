@@ -30,7 +30,7 @@ public class RootActivity extends AppCompatActivity {
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        ImageLoader.getInstance().clear();
+        ImageLoader.getInstance().clear(this);
         Http.clearTask(null);
     }
 }

@@ -1,5 +1,6 @@
 package org.liaohailong.library.image;
 
+import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.drawable.Drawable;
@@ -9,6 +10,7 @@ import android.support.annotation.DrawableRes;
 import android.support.annotation.Size;
 import android.text.TextUtils;
 import android.util.Log;
+import android.view.View;
 import android.widget.ImageView;
 
 import org.liaohailong.library.RootApplication;
@@ -31,7 +33,6 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
 
 /**
  * 图片加载器
@@ -61,9 +62,8 @@ public class ImageLoader {
     private ImageConfig config = new ImageConfig();
 
     private static final int THREAD_POOL_SIZE = 5;
-    private static final ExecutorService EXECUTOR = Executors.newFixedThreadPool(THREAD_POOL_SIZE);
+    private static final Map<String, ExecutorService> EXECUTOR_POOL_MAP = new HashMap<>();
     private static final Handler HANDLER = new ImageHandler();
-    private static final Map<String, Future> TASK = new HashMap<>();
     private static final int BUFF_SIZE = 8192;//文件IO buff字节数
 
     public ImageConfig getConfig() {
@@ -71,6 +71,14 @@ public class ImageLoader {
     }
 
     private static final BitmapLruCache CACHE = new BitmapLruCache();
+
+    public void downloadOnly(String url, ImageLoaderCallback callback) {
+        downloadOnly(url, 0, 0, callback);
+    }
+
+    public void downloadOnly(String url, int scaleWidth, int scaleHeight, ImageLoaderCallback callback) {
+        setImage(null, url, 0, scaleWidth, scaleHeight, callback);
+    }
 
     public void setImage(ImageView imageView, String url) {
         setImage(imageView, url, 0);
@@ -139,22 +147,16 @@ public class ImageLoader {
         }
         //判断是否命中本地SD卡缓存
         if (diskBitmap.exists() && diskBitmap.isFile()) {
-            if (!TASK.containsKey(url)) {
-                DiskRunnable diskRunnable = new DiskRunnable(imageView, url, diskBitmap, scaleWidth, scaleHeight, callback, getConfig());
-                Future task = EXECUTOR.submit(diskRunnable);
-                TASK.put(url, task);
-            }
+            DiskRunnable diskRunnable = new DiskRunnable(imageView, url, diskBitmap, scaleWidth, scaleHeight, callback, getConfig());
+            submitTask(imageView, diskRunnable);
             return true;
         }
         return false;
     }
 
     private synchronized void getBitmapFromHttp(ImageView imageView, String url, int scaleWidth, int scaleHeight, ImageLoaderCallback callback) {
-        if (!TASK.containsKey(url)) {
-            HttpRunnable httpRunnable = new HttpRunnable(imageView, url, getSavePath(url, scaleWidth, scaleHeight), scaleWidth, scaleHeight, callback, getConfig());
-            Future task = EXECUTOR.submit(httpRunnable);
-            TASK.put(url, task);
-        }
+        HttpRunnable httpRunnable = new HttpRunnable(imageView, url, getSavePath(url, scaleWidth, scaleHeight), scaleWidth, scaleHeight, callback, getConfig());
+        submitTask(imageView, httpRunnable);
     }
 
     /**
@@ -236,6 +238,15 @@ public class ImageLoader {
         return null;
     }
 
+    private void submitTask(View view, Runnable runnable) {
+        String cxt = view.getContext().toString();
+        ExecutorService executorService = EXECUTOR_POOL_MAP.get(cxt);
+        if (executorService == null) {
+            executorService = Executors.newFixedThreadPool(THREAD_POOL_SIZE);
+            EXECUTOR_POOL_MAP.put(cxt, executorService);
+        }
+        executorService.execute(runnable);
+    }
 
     private static void done(String fileName, Bitmap bitmap, ImageView imageView, ImageLoaderCallback callback) {
         if (bitmap == null || fileName == null) {
@@ -256,17 +267,16 @@ public class ImageLoader {
     }
 
     /**
-     * 清除所有任务，必须在主线程调用
+     * 根据Activity清理Activity中加载的图片
+     * 必须在主线程调用
      */
-    public void clear() {
+    public synchronized void clear(Context context) {
         Utility.checkMain();
-        for (Map.Entry<String, Future> entry : TASK.entrySet()) {
-            Future future = entry.getValue();
-            if (future != null) {
-                future.cancel(true);
-            }
+        String key = context.toString();
+        if (EXECUTOR_POOL_MAP.containsKey(key)) {
+            EXECUTOR_POOL_MAP.get(key).shutdownNow();
+            EXECUTOR_POOL_MAP.remove(key);
         }
-        TASK.clear();
     }
 
     private static class ImageHandler extends Handler {
@@ -283,10 +293,6 @@ public class ImageLoader {
                 case HTTP_LOAD_COMPLETE:
                     done(holder.fileName, holder.bitmap, holder.imageView, holder.callback);
                     break;
-            }
-            //清除缓存任务
-            if (TASK.containsKey(holder.url)) {
-                TASK.remove(holder.url);
             }
         }
     }

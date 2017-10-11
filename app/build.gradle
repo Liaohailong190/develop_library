@@ -31,7 +31,4 @@ dependencies {
     compile project(':library')
     //pdf相关
     compile 'com.github.barteksc:pdfium-android:1.7.0'
-    //glide相关
-    compile 'com.github.bumptech.glide:glide:4.2.0'
-    annotationProcessor 'com.github.bumptech.glide:compiler:4.2.0'
 }
