@@ -24,6 +24,7 @@ import org.liaohailong.library.inject.SaveState;
 import org.liaohailong.library.util.ToastUtil;
 import org.liaohailong.pdftestapp.BaseFragment;
 import org.liaohailong.pdftestapp.R;
+import org.liaohailong.pdftestapp.activity.KotlinActivity;
 import org.liaohailong.pdftestapp.model.Student;
 
 import java.io.IOException;
@@ -49,7 +50,7 @@ public class MainFragment extends BaseFragment {
 
     private String imageUrl01 = "https://timgsa.baidu.com/timg?image&quality=80&size=b9999_10000&sec=1505054331352&di=67367353f3ac52e7cdaca7221de9c39d&imgtype=0&src=http%3A%2F%2Fimg.mp.itc.cn%2Fupload%2F20161003%2F599d93c935d646b9a1b7e8adb049a8fa_th.jpg";
     private String imageUrl02 = "/storage/emulated/0/output_image.jpg";
-//    private String imageUrl03 = "https://timgsa.baidu.com/timg?image&quality=80&size=b9999_10000&sec=1505106699538&di=6e7649394fca8898968dd0a1388c9b76&imgtype=0&src=http%3A%2F%2Fimg.mp.itc.cn%2Fupload%2F20160829%2F24997e71d5814cf48f307d7caece946c.gif";
+    //    private String imageUrl03 = "https://timgsa.baidu.com/timg?image&quality=80&size=b9999_10000&sec=1505106699538&di=6e7649394fca8898968dd0a1388c9b76&imgtype=0&src=http%3A%2F%2Fimg.mp.itc.cn%2Fupload%2F20160829%2F24997e71d5814cf48f307d7caece946c.gif";
     private String[] urls = new String[2];
     private int imageUrlIndex = 0;
     private int httpRequestIndex = 0;
@@ -110,12 +111,15 @@ public class MainFragment extends BaseFragment {
 //        urls[2] = imageUrl03;
     }
 
-    @OnClick({R.id.text_fragment})
+    @OnClick({R.id.text_fragment, R.id.kotlin_btn})
     public void recordCount(View v) {
         switch (v.getId()) {
             case R.id.text_fragment:
                 count++;
                 textView.setText(TEXT + count + "次");
+                break;
+            case R.id.kotlin_btn:
+                KotlinActivity.Companion.show(getContext());
                 break;
         }
     }
