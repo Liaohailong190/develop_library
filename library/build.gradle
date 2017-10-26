@@ -1,12 +1,13 @@
 apply plugin: 'com.android.library'
 
 android {
-    compileSdkVersion 25
-    buildToolsVersion "26.0.1"
+    compileSdkVersion 26
+    buildToolsVersion "26.0.2"
 
     defaultConfig {
         minSdkVersion 19
-        targetSdkVersion 25
+        //noinspection OldTargetApi
+        targetSdkVersion 26
         versionCode 1
         versionName "1.0"
 
@@ -26,17 +27,17 @@ dependencies {
     androidTestCompile('com.android.support.test.espresso:espresso-core:2.2.2', {
         exclude group: 'com.android.support', module: 'support-annotations'
     })
-    compile 'com.android.support:appcompat-v7:25.3.1'
+    compile 'com.android.support:appcompat-v7:26.1.0'
     testCompile 'junit:junit:4.12'
     //gson解析
-    compile 'com.google.code.gson:gson:2.7'
+    compile 'com.google.code.gson:gson:2.8.0'
     // ormlite, ORM工具
     compile files('libs/ormlite-core-5.0.jar')
     compile files('libs/ormlite-android-5.0.jar')
     compile files('libs/android-query-full.0.26.7.jar')
     //列表
-    compile 'com.android.support:recyclerview-v7:25.3.1'
+    compile 'com.android.support:recyclerview-v7:26.1.0'
     //请求网络相关
     compile 'com.squareup.okhttp:okhttp:2.4.0'
-    compile 'com.squareup.okio:okio:1.5.0'
+    compile 'com.squareup.okio:okio:1.11.0'
 }
