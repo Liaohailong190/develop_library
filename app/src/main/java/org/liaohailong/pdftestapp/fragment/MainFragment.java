@@ -24,6 +24,7 @@ import org.liaohailong.library.inject.SaveState;
 import org.liaohailong.library.util.ToastUtil;
 import org.liaohailong.pdftestapp.BaseFragment;
 import org.liaohailong.pdftestapp.R;
+import org.liaohailong.pdftestapp.activity.BoomActivity;
 import org.liaohailong.pdftestapp.activity.KotlinActivity;
 import org.liaohailong.pdftestapp.model.Student;
 
@@ -111,7 +112,7 @@ public class MainFragment extends BaseFragment {
 //        urls[2] = imageUrl03;
     }
 
-    @OnClick({R.id.text_fragment, R.id.kotlin_btn})
+    @OnClick({R.id.text_fragment, R.id.kotlin_btn, R.id.bomb_btn})
     public void recordCount(View v) {
         switch (v.getId()) {
             case R.id.text_fragment:
@@ -120,6 +121,9 @@ public class MainFragment extends BaseFragment {
                 break;
             case R.id.kotlin_btn:
                 KotlinActivity.Companion.show(getContext());
+                break;
+            case R.id.bomb_btn:
+                BoomActivity.show(getContext());
                 break;
         }
     }

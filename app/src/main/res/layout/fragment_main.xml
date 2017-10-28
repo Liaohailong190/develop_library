@@ -25,6 +25,11 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="点我跳转KotlinActivity" />
+    <Button
+        android:id="@+id/bomb_btn"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="点我跳转BoomActivity" />
 
     <ImageView
         android:id="@+id/avatar"
