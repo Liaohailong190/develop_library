@@ -13,8 +13,8 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import org.liaohailong.library.inject.BindContentView;
-import org.liaohailong.library.inject.OnClick;
 import org.liaohailong.library.inject.BindView;
+import org.liaohailong.library.inject.OnClick;
 import org.liaohailong.library.inject.OnLongClick;
 import org.liaohailong.library.util.PermissionUtil;
 import org.liaohailong.library.widget.FileLoader;

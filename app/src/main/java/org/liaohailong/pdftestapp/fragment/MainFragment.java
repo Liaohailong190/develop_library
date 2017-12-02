@@ -7,19 +7,18 @@ import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import org.liaohailong.library.async.Cat;
 import org.liaohailong.library.async.Async;
+import org.liaohailong.library.async.Cat;
 import org.liaohailong.library.async.Mouse;
 import org.liaohailong.library.async.Schedulers;
-import org.liaohailong.library.db.OrmDao;
 import org.liaohailong.library.db.Orm;
+import org.liaohailong.library.db.OrmDao;
 import org.liaohailong.library.http.Http;
 import org.liaohailong.library.http.HttpCallback;
-import org.liaohailong.library.http.OKHttpWorker;
 import org.liaohailong.library.image.ImageLoader;
 import org.liaohailong.library.inject.BindContentView;
-import org.liaohailong.library.inject.OnClick;
 import org.liaohailong.library.inject.BindView;
+import org.liaohailong.library.inject.OnClick;
 import org.liaohailong.library.inject.SaveState;
 import org.liaohailong.library.util.ToastUtil;
 import org.liaohailong.pdftestapp.BaseFragment;
@@ -55,12 +54,12 @@ public class MainFragment extends BaseFragment {
     private String[] urls = new String[2];
     private int imageUrlIndex = 0;
     private int httpRequestIndex = 0;
-    private Mouse<String> mouse = new Mouse<String>() {
+    private Mouse<String, String> mouse = new Mouse<String, String>() {
         @Override
-        public String run() {
+        public String run(String params) {
             String text = "";
             try {
-                HttpURLConnection urlConnection = (HttpURLConnection) new URL("https://www.baidu.com/").openConnection();
+                HttpURLConnection urlConnection = (HttpURLConnection) new URL(params).openConnection();
                 int code = urlConnection.getResponseCode();
                 text = "code = " + code;
             } catch (IOException e) {
@@ -80,11 +79,12 @@ public class MainFragment extends BaseFragment {
                     public void chase(String s) {
                         textView.setText(s);
                     }
-                });
+                })
+                .execute("https://www.baidu.com/");
         httpRequestIndex = 0;
         for (int i = 0; i < 100; i++) {
             Http.create().url("https://www.baidu.com/")
-                    .worker(new OKHttpWorker())
+//                    .worker(new HttpUrlConnectionWorker())
                     .execute(new HttpCallback<String>() {
                         @Override
                         public void onSuccess(String result) {

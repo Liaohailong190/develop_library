@@ -10,7 +10,6 @@ import android.os.Message;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.AttributeSet;
-import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.RelativeLayout;
@@ -26,7 +25,6 @@ import org.liaohailong.pdftestapp.widget.pdf.source.InputStreamSource;
 import org.liaohailong.pdftestapp.widget.pdf.source.UriSource;
 import org.liaohailong.pdftestapp.widget.pdf.task.PdfCreateRunnable;
 import org.liaohailong.pdftestapp.widget.pdf.task.PdfRenderRunnable;
-import org.liaohailong.pdftestapp.widget.photoview.OnScaleChangedListener;
 import org.liaohailong.pdftestapp.widget.photoview.PhotoView;
 
 import java.io.File;

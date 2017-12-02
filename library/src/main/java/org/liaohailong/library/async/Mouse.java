@@ -5,10 +5,20 @@ package org.liaohailong.library.async;
  * Created by LHL on 2017/9/7.
  */
 
-public abstract class Mouse<Result> extends Pet {
+public abstract class Mouse<Params, Result> extends Pet {
+    private Params mParams;
+
     public Mouse() {
         setThread(Schedulers.IO_THREAD);
     }
 
-    public abstract Result run();
+    public void feed(Params mParams) {
+        this.mParams = mParams;
+    }
+
+    public abstract Result run(Params params);
+
+    public Result run() {
+        return run(mParams);
+    }
 }

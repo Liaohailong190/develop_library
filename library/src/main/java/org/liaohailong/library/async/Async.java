@@ -12,19 +12,19 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 
 /**
- * 介于观察者和被观察者之上
+ * 异步处理：猫捉老鼠
  * Created by LHL on 2017/9/7.
  */
 
-public class Async<Result> {
+public class Async<Params, Result> {
     private static final ExecutorService EXECUTOR = Executors.newFixedThreadPool(Schedulers.HUMAN_ATTENTION_NUMBER);
     private static final Handler HANDLER = new AsyncHandler();
     private static final Set<Future> TASK = new HashSet<>();
-    private Mouse<Result> mouse;
+    private Mouse<Params, Result> mouse;
     private Cat<Result> cat;
 
-    public static <T> Async<T> create(@NonNull Mouse<T> mouse) {
-        Async<T> async = new Async<>();
+    public static <T, V> Async<T, V> create(@NonNull Mouse<T, V> mouse) {
+        Async<T, V> async = new Async<>();
         async.watch(mouse);
         return async;
     }
@@ -33,20 +33,19 @@ public class Async<Result> {
 
     }
 
-    public void subscribe(@NonNull Cat<Result> cat) {
+    public Async<Params, Result> subscribe(@NonNull Cat<Result> cat) {
         this.cat = cat;
-        start();
+        return this;
     }
 
-    private Async<Result> watch(Mouse<Result> mouse) {
+    private void watch(Mouse<Params, Result> mouse) {
         this.mouse = mouse;
-        return this;
     }
 
     /**
      * @param thread {@link Schedulers}
      */
-    public Async<Result> catOn(int thread) {
+    public Async<Params, Result> catOn(int thread) {
         if (cat != null) {
             cat.setThread(thread);
         }
@@ -56,21 +55,22 @@ public class Async<Result> {
     /**
      * @param thread {@link Schedulers}
      */
-    public Async<Result> mouseOn(int thread) {
+    public Async<Params, Result> mouseOn(int thread) {
         if (mouse != null) {
             mouse.setThread(thread);
         }
         return this;
     }
 
-    private void start() {
-        Cage<Result> cage = new Cage<>(mouse, cat, null);
+    public void execute(Params params) {
+        mouse.feed(params);
+        Cage<Params, Result> cage = new Cage<>(mouse, cat, null);
         Result result = mouseTime(cage);
         cage.setResult(result);
         catTime(cage);
     }
 
-    private Result mouseTime(Cage<Result> cage) {
+    private Result mouseTime(Cage<Params, Result> cage) {
         int mouseThread = mouse.getThread();
         Result result = null;
         switch (mouseThread) {
@@ -78,7 +78,7 @@ public class Async<Result> {
                 result = mouse.run();
                 break;
             case Schedulers.IO_THREAD://子线程
-                PetRunnable<Result> petRunnable = new PetRunnable<>(cage, HANDLER, PetRunnable.MOUSE_TIME);
+                PetRunnable<Params, Result> petRunnable = new PetRunnable<>(cage, HANDLER, PetRunnable.MOUSE_TIME);
                 Future submit = EXECUTOR.submit(petRunnable);
                 TASK.add(submit);
                 break;
@@ -86,7 +86,7 @@ public class Async<Result> {
         return result;
     }
 
-    private void catTime(Cage<Result> cage) {
+    private void catTime(Cage<Params, Result> cage) {
         Result result = cage.result;
         if (result == null) {
             return;
@@ -97,7 +97,7 @@ public class Async<Result> {
                 cat.chase(result);
                 break;
             case Schedulers.IO_THREAD://子线程
-                PetRunnable<Result> petRunnable = new PetRunnable<>(cage, HANDLER, PetRunnable.CAT_TIME);
+                PetRunnable<Params, Result> petRunnable = new PetRunnable<>(cage, HANDLER, PetRunnable.CAT_TIME);
                 Future submit = EXECUTOR.submit(petRunnable);
                 TASK.add(submit);
                 break;
@@ -113,14 +113,14 @@ public class Async<Result> {
         TASK.clear();
     }
 
-    private static class PetRunnable<Result> implements Runnable {
+    private static class PetRunnable<Params, Result> implements Runnable {
         private static final int MOUSE_TIME = 0;
         private static final int CAT_TIME = 1;
-        private WeakReference<Cage<Result>> cageWeakReference;
+        private WeakReference<Cage<Params, Result>> cageWeakReference;
         private WeakReference<Handler> handlerWeakReference;
         private int mode = MOUSE_TIME;
 
-        private PetRunnable(Cage<Result> cage, Handler handler, int mode) {
+        private PetRunnable(Cage<Params, Result> cage, Handler handler, int mode) {
             this.cageWeakReference = new WeakReference<>(cage);
             this.handlerWeakReference = new WeakReference<>(handler);
             this.mode = mode;
@@ -129,10 +129,10 @@ public class Async<Result> {
         @Override
         public void run() {
             Handler handler = handlerWeakReference.get();
-            Cage<Result> cage = cageWeakReference.get();
+            Cage<Params, Result> cage = cageWeakReference.get();
             switch (mode) {
                 case MOUSE_TIME:
-                    Mouse<Result> mouse = cage.mouse;
+                    Mouse<Params, Result> mouse = cage.mouse;
                     Result result = null;
                     try {
                         result = mouse.run();
@@ -165,12 +165,12 @@ public class Async<Result> {
         }
     }
 
-    private static class Cage<Result> {
-        private Mouse<Result> mouse;
+    private static class Cage<Params, Result> {
+        private Mouse<Params, Result> mouse;
         private Cat<Result> cat;
         private Result result;
 
-        private Cage(Mouse<Result> mouse, Cat<Result> cat, Result result) {
+        private Cage(Mouse<Params, Result> mouse, Cat<Result> cat, Result result) {
             this.mouse = mouse;
             this.cat = cat;
             this.result = result;
