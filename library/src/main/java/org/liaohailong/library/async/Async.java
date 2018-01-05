@@ -17,7 +17,7 @@ import java.util.concurrent.Future;
  */
 
 public class Async<Params, Result> {
-    private static final ExecutorService EXECUTOR = Executors.newFixedThreadPool(Schedulers.HUMAN_ATTENTION_NUMBER);
+    private static ExecutorService EXECUTOR = Executors.newFixedThreadPool(Schedulers.HUMAN_ATTENTION_NUMBER);
     private static final Handler HANDLER = new AsyncHandler();
     private static final Set<Future> TASK = new HashSet<>();
     private Mouse<Params, Result> mouse;
@@ -79,8 +79,7 @@ public class Async<Params, Result> {
                 break;
             case Schedulers.IO_THREAD://子线程
                 PetRunnable<Params, Result> petRunnable = new PetRunnable<>(cage, HANDLER, PetRunnable.MOUSE_TIME);
-                Future submit = EXECUTOR.submit(petRunnable);
-                TASK.add(submit);
+                submitTask(petRunnable);
                 break;
         }
         return result;
@@ -98,19 +97,34 @@ public class Async<Params, Result> {
                 break;
             case Schedulers.IO_THREAD://子线程
                 PetRunnable<Params, Result> petRunnable = new PetRunnable<>(cage, HANDLER, PetRunnable.CAT_TIME);
-                Future submit = EXECUTOR.submit(petRunnable);
-                TASK.add(submit);
+                submitTask(petRunnable);
                 break;
         }
     }
 
-    public static void stopAll() {
+    private void submitTask(Runnable runnable) {
+        if (EXECUTOR == null || EXECUTOR.isShutdown()) {
+            EXECUTOR = Executors.newFixedThreadPool(Schedulers.HUMAN_ATTENTION_NUMBER);
+        }
+        Future submit = EXECUTOR.submit(runnable);
+        TASK.add(submit);
+    }
+
+    public static void clearTask() {
+        //清空当前运行的任务
         for (Future future : TASK) {
             if (future != null) {
                 future.cancel(true);
             }
         }
         TASK.clear();
+        //清空线程池，预备下次快速接受新的任务
+        if (EXECUTOR != null) {
+            if (!EXECUTOR.isShutdown()) {
+                EXECUTOR.shutdownNow();
+            }
+            EXECUTOR = null;
+        }
     }
 
     private static class PetRunnable<Params, Result> implements Runnable {
