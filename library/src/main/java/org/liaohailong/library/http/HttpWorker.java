@@ -4,15 +4,11 @@ package org.liaohailong.library.http;
 import android.os.Handler;
 import android.os.Message;
 import android.text.TextUtils;
-import android.util.Log;
 
 import java.net.URLEncoder;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.ThreadPoolExecutor;
@@ -27,12 +23,8 @@ public abstract class HttpWorker {
     private static final int TIME_OUT = 1000 * 15;
     //请求网络主体相关
     private static final int CPU_COUNT = Runtime.getRuntime().availableProcessors();
-    protected static final ThreadPoolExecutor THREAD_POOL_EXECUTOR;
+    private static ThreadPoolExecutor THREAD_POOL_EXECUTOR;
     private static final Set<Future> SUBMIT = new HashSet<>();
-
-    static {
-        THREAD_POOL_EXECUTOR = (ThreadPoolExecutor) Executors.newFixedThreadPool(CPU_COUNT);
-    }
 
     private static final char PARAMETER_DELIMITER = '&';
     private static final char PARAMETER_EQUALS_CHAR = '=';
@@ -76,14 +68,25 @@ public abstract class HttpWorker {
     /**
      * 子类需要实现此方法，做请求网络的执行工作
      */
-    protected abstract Future request();
+    protected abstract Runnable request();
 
     /**
      * 开始请求任务
      */
-    public void start() {
-        Future request = request();
-        SUBMIT.add(request);
+    void start() {
+        Runnable runnable = request();
+        submitTask(runnable);
+    }
+
+    /**
+     * @param runnable 需要提交的任务
+     */
+    private void submitTask(Runnable runnable) {
+        if (THREAD_POOL_EXECUTOR == null || THREAD_POOL_EXECUTOR.isShutdown()) {
+            THREAD_POOL_EXECUTOR = (ThreadPoolExecutor) Executors.newFixedThreadPool(CPU_COUNT);
+        }
+        Future submit = THREAD_POOL_EXECUTOR.submit(runnable);
+        SUBMIT.add(submit);
     }
 
     /**
@@ -98,6 +101,12 @@ public abstract class HttpWorker {
                 boolean cancel = submit.cancel(true);
             }
             SUBMIT.clear();
+            if (THREAD_POOL_EXECUTOR != null) {
+                if (!THREAD_POOL_EXECUTOR.isShutdown()) {
+                    THREAD_POOL_EXECUTOR.shutdownNow();
+                }
+                THREAD_POOL_EXECUTOR = null;
+            }
         } else {
             if (SUBMIT.contains(future)) {
                 boolean cancel = future.cancel(true);

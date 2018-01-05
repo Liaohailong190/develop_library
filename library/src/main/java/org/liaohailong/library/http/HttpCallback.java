@@ -21,8 +21,9 @@ import java.util.List;
 public abstract class HttpCallback<T> {
     private String url;
 
-    public void setResponse(String url,int code, String data) {
+    public void setResponse(String url, int code, String data) {
         this.url = url;
+        onPostExecute();
         if (code == HttpURLConnection.HTTP_OK) {
             T rawData = getRawData(data);
             onSuccess(rawData);
@@ -31,7 +32,7 @@ public abstract class HttpCallback<T> {
         }
     }
 
-    public T getRawData(String data) {
+    protected T getRawData(String data) {
         try {
             Type type = Utility.getClassTypeParameter(getClass());
             if (type == String.class) {
@@ -63,20 +64,28 @@ public abstract class HttpCallback<T> {
                     return (T) JsonUtil.jsonArrayToGenericList(jsonArray, arguments[0]);
                 }
             }
-
             return JsonUtil.jsonToGenericObject(jsonObject, type);
         } catch (Exception e) {
             e.printStackTrace();
             return null;
         }
-
     }
 
     private String getResultListKey() {
         return "list";
     }
 
-    public void onPreExecute(){
+    /**
+     * http任务执行前回调
+     */
+    public void onPreExecute() {
+
+    }
+
+    /**
+     * http任务完毕后回调
+     */
+    public void onPostExecute() {
 
     }
 

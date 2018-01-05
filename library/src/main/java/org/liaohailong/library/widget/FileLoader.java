@@ -1,6 +1,7 @@
 package org.liaohailong.library.widget;
 
 
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.os.Handler;
@@ -53,6 +54,7 @@ public class FileLoader {
     private Map<String, Future<?>> taskMap = new HashMap<>();
     private final OkHttpClient client;
     private final ExecutorService executor;
+    @SuppressLint("HandlerLeak")
     private Handler handler = new Handler() {
         @Override
         public void handleMessage(Message msg) {
@@ -151,7 +153,17 @@ public class FileLoader {
      * @return 本地缓存文件地址
      */
     private String getPath(String url) {
-        return directory + Md5Util.MD5Encode(url);
+        String path = directory + Md5Util.MD5Encode(url);
+        //尽量添加后缀
+        if (url.contains("/")) {
+            String[] urlSplit = url.split("/");
+            String name = urlSplit[urlSplit.length - 1];
+            if (name.contains(".")) {
+                String[] nameSplit = name.split("\\.");
+                path = path + "." + nameSplit[nameSplit.length - 1];
+            }
+        }
+        return path;
     }
 
     /**

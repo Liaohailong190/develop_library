@@ -36,8 +36,8 @@ public class OKHttpWorker extends HttpWorker {
     }
 
     @Override
-    public Future request() {
-        Runnable runnable = new Runnable() {
+    public Runnable request() {
+        return new Runnable() {
             @Override
             public void run() {
                 final String url = getUrl();
@@ -87,7 +87,6 @@ public class OKHttpWorker extends HttpWorker {
                 });
             }
         };
-        return THREAD_POOL_EXECUTOR.submit(runnable);
     }
 
     private static void setHeaders(Request.Builder builder) {

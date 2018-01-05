@@ -35,8 +35,9 @@ public class HttpUrlConnectionWorker extends HttpWorker {
     private static final String X_WWW_FORM_URL_ENCODE = "application/x-www-form-urlencoded";
     private static final String GZIP = "gzip";
 
-    public Future request() {
-        Runnable runnable = new Runnable() {
+    @Override
+    public Runnable request() {
+        return new Runnable() {
             @Override
             public void run() {
                 PrintWriter out = null;
@@ -89,7 +90,6 @@ public class HttpUrlConnectionWorker extends HttpWorker {
                 }
             }
         };
-        return THREAD_POOL_EXECUTOR.submit(runnable);
     }
 
     private HttpURLConnection openConnection(String url) throws Exception {

@@ -22,7 +22,6 @@ import java.util.Map;
 
 /**
  * 注解使用类
- * Victor是我的英文名字
  * Created by LHL on 2017/9/6.
  */
 
