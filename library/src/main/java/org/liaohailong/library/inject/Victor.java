@@ -13,12 +13,12 @@ import android.view.ViewGroup;
 import org.liaohailong.library.util.BundleUtil;
 
 import java.lang.annotation.Annotation;
+import java.lang.ref.WeakReference;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.WeakHashMap;
 
 /**
  * 注解使用类
@@ -90,6 +90,9 @@ public class Victor {
      */
     private static void checkBindView(@NonNull ViewFinder finder) {
         Object owner = finder.getOwner();
+        if (owner == null) {
+            return;
+        }
         Class aClass = owner.getClass();
         while (aClass != Object.class) {
             Field[] fields = aClass.getDeclaredFields();
@@ -114,7 +117,10 @@ public class Victor {
                 if (viewById != null) {
                     try {
                         field.setAccessible(true);
-                        field.set(finder.getOwner(), viewById);
+                        Object owner = finder.getOwner();
+                        if (owner != null) {
+                            field.set(owner, viewById);
+                        }
                     } catch (IllegalAccessException e) {
                         e.printStackTrace();
                     }
@@ -130,6 +136,9 @@ public class Victor {
      */
     private static void checkOnClick(ViewFinder finder) {
         Object owner = finder.getOwner();
+        if (owner == null) {
+            return;
+        }
         Class aClass = owner.getClass();
         while (aClass != Object.class) {
             Method[] declaredMethods = aClass.getDeclaredMethods();
@@ -156,6 +165,9 @@ public class Victor {
      */
     private static void checkOnLongClick(ViewFinder finder) {
         Object owner = finder.getOwner();
+        if (owner == null) {
+            return;
+        }
         Class aClass = owner.getClass();
         while (aClass != Object.class) {
             Method[] declaredMethods = aClass.getDeclaredMethods();
@@ -302,43 +314,43 @@ public class Victor {
     }
 
     private static class ViewFinder {
-        private View container = null;
-        private Object fieldOwner = null;
+        private WeakReference<View> container = null;
+        private WeakReference<Object> fieldOwner = null;
 
         private ViewFinder(@NonNull Object fieldOwner, @NonNull View container) {
-            this.container = container;
-            this.fieldOwner = fieldOwner;
+            this.container = new WeakReference<>(container);
+            this.fieldOwner = new WeakReference<>(fieldOwner);
         }
 
         private View findViewById(int id) {
-            return container == null ? null : container.findViewById(id);
+            return container == null || container.get() == null ? null : container.get().findViewById(id);
         }
 
         private Object getOwner() {
-            return fieldOwner;
+            return fieldOwner == null || fieldOwner.get() == null ? null : fieldOwner.get();
         }
 
     }
 
     private static class InjectInvocationHandler implements InvocationHandler {
         //拦截的方法名列表
-        private Map<String, Method> map = new HashMap<>();
+        private WeakHashMap<String, Method> map = new WeakHashMap<>();
         //方法拥有者
-        private Object target;
+        private WeakReference<Object> target;
 
         private InjectInvocationHandler(Object target) {
-            this.target = target;
+            this.target = new WeakReference<>(target);
         }
 
         @Override
         public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
-            if (target != null) {
+            if (target != null && target.get() != null) {
                 //获取方法名
                 String name = method.getName();
                 Method m = map.get(name);
                 if (m != null) {//如果不存在与拦截列表，就执行
                     m.setAccessible(true);
-                    return m.invoke(target, args);
+                    return m.invoke(target.get(), args);
                 }
             }
             return null;
@@ -348,9 +360,9 @@ public class Victor {
          * 向拦截列表里添加拦截的方法
          */
         private void add(String name, Method method) {
-            map.put(name, method);
+            if (map != null) {
+                map.put(name, method);
+            }
         }
-
     }
-
 }
