@@ -97,12 +97,6 @@ public class OrmLiteDbHelper extends OrmLiteSqliteOpenHelper {
     @Override
     public void close() {
         super.close();
-
-        for (String key : daos.keySet()) {
-            Dao dao = daos.get(key);
-            dao = null;
-        }
-
         daos.clear();
     }
 
