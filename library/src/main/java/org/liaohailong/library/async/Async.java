@@ -86,7 +86,7 @@ public class Async<Params, Result> {
     }
 
     private void catTime(Cage<Params, Result> cage) {
-        Result result = cage.result;
+        Result result = cage.getResult();
         if (result == null) {
             return;
         }
@@ -144,9 +144,16 @@ public class Async<Params, Result> {
         public void run() {
             Handler handler = handlerWeakReference.get();
             Cage<Params, Result> cage = cageWeakReference.get();
+            if (handler == null || cage == null) {
+                return;
+            }
+            Cat<Result> cat;
             switch (mode) {
                 case MOUSE_TIME:
-                    Mouse<Params, Result> mouse = cage.mouse;
+                    Mouse<Params, Result> mouse = cage.getMouse();
+                    if (mouse == null) {
+                        return;
+                    }
                     Result result = null;
                     try {
                         result = mouse.run();
@@ -155,9 +162,13 @@ public class Async<Params, Result> {
                     }
                     cage.setResult(result);
                     //判断观察者运行线程
-                    if (cage.cat.getThread() == Schedulers.IO_THREAD) {
+                    cat = cage.getCat();
+                    if (cat == null) {
+                        return;
+                    }
+                    if (cat.getThread() == Schedulers.IO_THREAD) {
                         //观察者也在子线程运行，直接操作
-                        cage.cat.chase(result);
+                        cat.chase(result);
                     } else {
                         Message message = handler.obtainMessage();
                         message.what = AsyncHandler.MOUSE;
@@ -167,8 +178,14 @@ public class Async<Params, Result> {
 
                     break;
                 case CAT_TIME:
-                    Cat<Result> cat = cage.cat;
-                    Result rawResult = cage.result;
+                    cat = cage.getCat();
+                    if (cat == null) {
+                        return;
+                    }
+                    Result rawResult = cage.getResult();
+                    if (rawResult == null) {
+                        return;
+                    }
                     try {
                         cat.chase(rawResult);
                     } catch (Exception ex) {
@@ -180,18 +197,33 @@ public class Async<Params, Result> {
     }
 
     private static class Cage<Params, Result> {
-        private Mouse<Params, Result> mouse;
-        private Cat<Result> cat;
-        private Result result;
+        private WeakReference<Mouse<Params, Result>> mouse;
+        private WeakReference<Cat<Result>> cat;
+        private WeakReference<Result> result;
 
         private Cage(Mouse<Params, Result> mouse, Cat<Result> cat, Result result) {
-            this.mouse = mouse;
-            this.cat = cat;
-            this.result = result;
+            this.mouse = new WeakReference<>(mouse);
+            this.cat = new WeakReference<>(cat);
+            this.result = new WeakReference<>(result);
         }
 
         private void setResult(Result result) {
-            this.result = result;
+            if (this.result != null) {
+                this.result.clear();
+            }
+            this.result = new WeakReference<>(result);
+        }
+
+        private Mouse<Params, Result> getMouse() {
+            return mouse == null || mouse.get() == null ? null : mouse.get();
+        }
+
+        private Cat<Result> getCat() {
+            return cat == null || cat.get() == null ? null : cat.get();
+        }
+
+        public Result getResult() {
+            return result == null || result.get() == null ? null : result.get();
         }
     }
 
@@ -203,8 +235,11 @@ public class Async<Params, Result> {
             switch (msg.what) {
                 case MOUSE://被观察者完毕
                     Cage cage = (Cage) msg.obj;
-                    Cat cat = cage.cat;
-                    cat.chase(cage.result);
+                    Cat cat = cage.getCat();
+                    Object result = cage.getResult();
+                    if (cat != null && result != null) {
+                        cat.chase(result);
+                    }
                     break;
             }
         }
