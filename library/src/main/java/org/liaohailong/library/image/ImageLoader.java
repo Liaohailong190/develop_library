@@ -30,7 +30,9 @@ import java.lang.ref.WeakReference;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -61,9 +63,10 @@ public class ImageLoader {
 
     private ImageConfig config = new ImageConfig();
 
-    private static final int THREAD_POOL_SIZE = 5;
-    private static final Map<String, ExecutorService> EXECUTOR_POOL_MAP = new HashMap<>();
-    private static final Handler HANDLER = new ImageHandler();
+    private static final int THREAD_POOL_SIZE = 5;//图片请求线程池数量
+    private static final Map<String, ExecutorService> EXECUTOR_POOL_MAP = new HashMap<>();//按照界面分类存储图片请求线程池
+    private static final Handler HANDLER = new ImageHandler();//回调主线程Handler
+    private static final Map<String, Set<String>> RECORD_TASK = new HashMap<>();//记录正在执行请求的任务---><展示界面，Set<图片url为标识>>
     private static final int BUFF_SIZE = 8192;//文件IO buff字节数
 
     public ImageConfig getConfig() {
@@ -148,7 +151,7 @@ public class ImageLoader {
         //判断是否命中本地SD卡缓存
         if (diskBitmap.exists() && diskBitmap.isFile()) {
             DiskRunnable diskRunnable = new DiskRunnable(imageView, url, diskBitmap, scaleWidth, scaleHeight, callback, getConfig());
-            submitTask(imageView, diskRunnable);
+            submitTask(imageView, url, diskRunnable);
             return true;
         }
         return false;
@@ -156,7 +159,29 @@ public class ImageLoader {
 
     private synchronized void getBitmapFromHttp(ImageView imageView, String url, int scaleWidth, int scaleHeight, ImageLoaderCallback callback) {
         HttpRunnable httpRunnable = new HttpRunnable(imageView, url, getSavePath(url, scaleWidth, scaleHeight), scaleWidth, scaleHeight, callback, getConfig());
-        submitTask(imageView, httpRunnable);
+        submitTask(imageView, url, httpRunnable);
+    }
+
+    private void submitTask(View view, String url, Runnable runnable) {
+        if (TextUtils.isEmpty(url)) {
+            return;
+        }
+        String cxt = view == null ? RootApplication.getInstance().toString() : view.getContext().toString();
+        //保存每次图片任务，以路径包保存标记
+        Set<String> recordSet = RECORD_TASK.get(cxt);
+        if (recordSet == null) {
+            recordSet = new HashSet<>();
+            RECORD_TASK.put(cxt, recordSet);
+        }
+        if (recordSet.contains(url)) {
+            recordSet.add(url);
+        }
+        ExecutorService executorService = EXECUTOR_POOL_MAP.get(cxt);
+        if (executorService == null || executorService.isShutdown()) {
+            executorService = Executors.newFixedThreadPool(THREAD_POOL_SIZE);
+            EXECUTOR_POOL_MAP.put(cxt, executorService);
+        }
+        executorService.execute(runnable);
     }
 
     /**
@@ -238,16 +263,6 @@ public class ImageLoader {
         return null;
     }
 
-    private void submitTask(View view, Runnable runnable) {
-        String cxt = view == null ? RootApplication.getInstance().toString() : view.getContext().toString();
-        ExecutorService executorService = EXECUTOR_POOL_MAP.get(cxt);
-        if (executorService == null || executorService.isShutdown()) {
-            executorService = Executors.newFixedThreadPool(THREAD_POOL_SIZE);
-            EXECUTOR_POOL_MAP.put(cxt, executorService);
-        }
-        executorService.execute(runnable);
-    }
-
     private static void done(String fileName, Bitmap bitmap, ImageView imageView, ImageLoaderCallback callback) {
         if (bitmap == null || TextUtils.isEmpty(fileName)) {
             return;
@@ -277,6 +292,10 @@ public class ImageLoader {
             EXECUTOR_POOL_MAP.get(key).shutdownNow();
             EXECUTOR_POOL_MAP.remove(key);
         }
+        Set<String> recordSet = RECORD_TASK.get(key);
+        if (recordSet != null) {
+            recordSet.clear();
+        }
     }
 
     private static class ImageHandler extends Handler {
@@ -286,6 +305,9 @@ public class ImageLoader {
         @Override
         public void handleMessage(Message msg) {
             Holder holder = (Holder) msg.obj;
+            if (holder == null) {
+                return;
+            }
             switch (msg.what) {
                 case DISK_LOAD_COMPLETE:
                     done(holder.getFileName(), holder.getBitmap(), holder.getImageView(), holder.getCallback());
@@ -294,9 +316,17 @@ public class ImageLoader {
                     done(holder.getFileName(), holder.getBitmap(), holder.getImageView(), holder.getCallback());
                     break;
             }
-            if (holder != null) {
-                holder.release();
+            String url = holder.getUrl();
+            for (Map.Entry<String, Set<String>> entry : RECORD_TASK.entrySet()) {
+                Set<String> recordSet = entry.getValue();
+                if (recordSet == null) {
+                    continue;
+                }
+                if (recordSet.contains(url)) {
+                    recordSet.remove(url);
+                }
             }
+            holder.release();
         }
     }
 
