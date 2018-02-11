@@ -239,9 +239,9 @@ public class ImageLoader {
     }
 
     private void submitTask(View view, Runnable runnable) {
-        String cxt = view.getContext().toString();
+        String cxt = view == null ? RootApplication.getInstance().toString() : view.getContext().toString();
         ExecutorService executorService = EXECUTOR_POOL_MAP.get(cxt);
-        if (executorService == null) {
+        if (executorService == null || executorService.isShutdown()) {
             executorService = Executors.newFixedThreadPool(THREAD_POOL_SIZE);
             EXECUTOR_POOL_MAP.put(cxt, executorService);
         }
@@ -249,7 +249,7 @@ public class ImageLoader {
     }
 
     private static void done(String fileName, Bitmap bitmap, ImageView imageView, ImageLoaderCallback callback) {
-        if (bitmap == null || fileName == null) {
+        if (bitmap == null || TextUtils.isEmpty(fileName)) {
             return;
         }
         //完成任务之后首先进行内存缓存
@@ -288,11 +288,14 @@ public class ImageLoader {
             Holder holder = (Holder) msg.obj;
             switch (msg.what) {
                 case DISK_LOAD_COMPLETE:
-                    done(holder.fileName, holder.bitmap, holder.imageView, holder.callback);
+                    done(holder.getFileName(), holder.getBitmap(), holder.getImageView(), holder.getCallback());
                     break;
                 case HTTP_LOAD_COMPLETE:
-                    done(holder.fileName, holder.bitmap, holder.imageView, holder.callback);
+                    done(holder.getFileName(), holder.getBitmap(), holder.getImageView(), holder.getCallback());
                     break;
+            }
+            if (holder != null) {
+                holder.release();
             }
         }
     }
@@ -359,13 +362,13 @@ public class ImageLoader {
         }
 
         protected void send2Handler(ImageView imageView, String url, Bitmap bitmap, ImageLoaderCallback callback, String path, int flag) {
-            Holder holder = new Holder();
-            holder.imageView = imageView;
-            holder.url = url;
-            holder.callback = callback;
             String[] split = path.split("/");
-            holder.fileName = split[split.length - 1];
-            holder.bitmap = bitmap;
+            Holder holder = new Holder()
+                    .setImageView(imageView)
+                    .setUrl(url)
+                    .setCallback(callback)
+                    .setFileName(split[split.length - 1])
+                    .setBitmap(bitmap);
             Message message = HANDLER.obtainMessage();
             message.what = flag;
             message.obj = holder;
@@ -499,10 +502,70 @@ public class ImageLoader {
     }
 
     private static class Holder {
-        private ImageView imageView;
+        private WeakReference<ImageView> imageView;
         private String url;
-        private Bitmap bitmap;
+        private WeakReference<Bitmap> bitmap;
         private String fileName;
-        private ImageLoaderCallback callback;
+        private WeakReference<ImageLoaderCallback> callback;
+
+        private ImageView getImageView() {
+            return imageView != null && imageView.get() != null ? imageView.get() : null;
+        }
+
+        private Holder setImageView(ImageView imageView) {
+            this.imageView = new WeakReference<>(imageView);
+            return this;
+        }
+
+        private String getUrl() {
+            return url;
+        }
+
+        private Holder setUrl(String url) {
+            this.url = url;
+            return this;
+        }
+
+        private Bitmap getBitmap() {
+            return bitmap != null && bitmap.get() != null ? bitmap.get() : null;
+        }
+
+        private Holder setBitmap(Bitmap bitmap) {
+            this.bitmap = new WeakReference<>(bitmap);
+            return this;
+        }
+
+        private String getFileName() {
+            return fileName;
+        }
+
+        private Holder setFileName(String fileName) {
+            this.fileName = fileName;
+            return this;
+        }
+
+        private ImageLoaderCallback getCallback() {
+            return callback != null && callback.get() != null ? callback.get() : null;
+        }
+
+        private Holder setCallback(ImageLoaderCallback callback) {
+            this.callback = new WeakReference<>(callback);
+            return this;
+        }
+
+        private void release() {
+            if (imageView != null) {
+                imageView.clear();
+                imageView = null;
+            }
+            if (bitmap != null) {
+                bitmap.clear();
+                bitmap = null;
+            }
+            if (callback != null) {
+                callback.clear();
+                callback = null;
+            }
+        }
     }
 }
