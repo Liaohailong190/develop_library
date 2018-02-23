@@ -28,9 +28,11 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.RandomAccessFile;
+import java.lang.ref.WeakReference;
 import java.net.HttpURLConnection;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.WeakHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
@@ -48,18 +50,18 @@ public class FileLoader {
     private static final int FILE_UP_LOAD_COMPLETE = 2;//文件上传完成
     private static final int FILE_LOAD_FAILURE = 3;//文件下载/上传失败
     private static final int THREAD_POOL_SIZE = 5;
-    private String directory;
+    private String mDirectory;
     private static final String TEMP = ".temp";
-    private Map<String, OnFileStatusCallBack> callBackMap = new HashMap<>();
-    private Map<String, Future<?>> taskMap = new HashMap<>();
-    private final OkHttpClient client;
-    private final ExecutorService executor;
+    private WeakHashMap<String, OnFileStatusCallBack> mCallBackMap = new WeakHashMap<>();
+    private Map<String, WeakReference<Future<?>>> mTaskMap = new HashMap<>();
+    private final OkHttpClient mClient;
+    private final ExecutorService mExecutor;
     @SuppressLint("HandlerLeak")
     private Handler handler = new Handler() {
         @Override
         public void handleMessage(Message msg) {
             Status status = (Status) msg.obj;
-            OnFileStatusCallBack callBack = callBackMap.get(status.url);
+            OnFileStatusCallBack callBack = mCallBackMap.get(status.url);
             if (callBack == null) {
                 return;
             }
@@ -69,32 +71,32 @@ public class FileLoader {
                     break;
                 case FILE_DOWN_LOAD_COMPLETE://下载完成
                     callBack.onFileDownLoadComplete(status.path);
-                    callBackMap.remove(status.url);
+                    mCallBackMap.remove(status.url);
                     break;
                 case FILE_UP_LOAD_COMPLETE://上传完毕
                     callBack.onFileUpLoadComplete(status.result);
-                    callBackMap.remove(status.url);
+                    mCallBackMap.remove(status.url);
                     break;
                 case FILE_LOAD_FAILURE://失败了
                     callBack.onFileLoadFailure(status.result);
-                    callBackMap.remove(status.url);
+                    mCallBackMap.remove(status.url);
                     break;
             }
         }
     };
 
     private FileLoader() {
-        executor = Executors.newFixedThreadPool(THREAD_POOL_SIZE);
-        client = new OkHttpClient();
+        mExecutor = Executors.newFixedThreadPool(THREAD_POOL_SIZE);
+        mClient = new OkHttpClient();
         initClient();
-        directory = FileUtil.getRootDirectory(NAME);
+        mDirectory = FileUtil.getRootDirectory(NAME);
     }
 
     //设置超时，不设置可能会报异常
     private void initClient() {
-        client.setConnectTimeout(15, TimeUnit.MINUTES);
-        client.setReadTimeout(15, TimeUnit.MINUTES);
-        client.setWriteTimeout(15, TimeUnit.MINUTES);
+        mClient.setConnectTimeout(15, TimeUnit.MINUTES);
+        mClient.setReadTimeout(15, TimeUnit.MINUTES);
+        mClient.setWriteTimeout(15, TimeUnit.MINUTES);
     }
 
 
@@ -113,10 +115,16 @@ public class FileLoader {
         if (TextUtils.isEmpty(path)) {
             return;
         }
-        directory = path;
+        mDirectory = path;
     }
 
-    public boolean downloadFile(String url, OnFileStatusCallBack callBack) {
+    /**
+     * 下载文件
+     *
+     * @param url      文件链接
+     * @param callBack 文件下载完毕回调
+     */
+    public void downloadFile(String url, OnFileStatusCallBack callBack) {
         String path = getPath(url);
         boolean saved = canFromDisk(path);
         //命中本地缓存
@@ -124,25 +132,32 @@ public class FileLoader {
             if (callBack != null) {
                 callBack.onFileDownLoadComplete(path);
             }
-            return true;
         }
         //从网络下载
-        if (taskMap.get(url) == null) {
+        if (mTaskMap.get(url) == null) {
             DownLoadFileRunnable runnable = new DownLoadFileRunnable(url);
-            callBackMap.put(url, callBack);
-            Future<?> submit = executor.submit(runnable);
-            taskMap.put(url, submit);
+            mCallBackMap.put(url, callBack);
+            Future<?> submit = mExecutor.submit(runnable);
+            WeakReference<Future<?>> futureWeakReference = new WeakReference<Future<?>>(submit);
+            mTaskMap.put(url, futureWeakReference);
         }
-        return false;
     }
 
+    /**
+     * 上传文件
+     *
+     * @param url      接收文件的api地址
+     * @param params   文件上传的携带参数
+     * @param callBack 文件上传状态回调s
+     */
     public void upLoadFile(String url, Map<String, Object> params, OnFileStatusCallBack callBack) {
         //网络上传
-        if (taskMap.get(url) == null) {
+        if (mTaskMap.get(url) == null) {
             UpLoadFileRunnable runnable = new UpLoadFileRunnable(url, params);
-            callBackMap.put(url, callBack);
-            Future<?> submit = executor.submit(runnable);
-            taskMap.put(url, submit);
+            mCallBackMap.put(url, callBack);
+            Future<?> submit = mExecutor.submit(runnable);
+            WeakReference<Future<?>> futureWeakReference = new WeakReference<Future<?>>(submit);
+            mTaskMap.put(url, futureWeakReference);
         }
     }
 
@@ -153,7 +168,7 @@ public class FileLoader {
      * @return 本地缓存文件地址
      */
     private String getPath(String url) {
-        String path = directory + Md5Util.MD5Encode(url);
+        String path = mDirectory + Md5Util.MD5Encode(url);
         //尽量添加后缀
         if (url.contains("/")) {
             String[] urlSplit = url.split("/");
@@ -201,12 +216,14 @@ public class FileLoader {
      * 终止任务，必须在主线程调用
      */
     public void clearAllTask() {
-        callBackMap.clear();
-        for (Map.Entry<String, Future<?>> entry : taskMap.entrySet()) {
-            Future<?> value = entry.getValue();
-            value.cancel(true);
+        mCallBackMap.clear();
+        for (Map.Entry<String, WeakReference<Future<?>>> entry : mTaskMap.entrySet()) {
+            WeakReference<Future<?>> value = entry.getValue();
+            if (value != null && value.get() != null) {
+                value.get().cancel(true);
+            }
         }
-        taskMap.clear();
+        mTaskMap.clear();
     }
 
     /**
@@ -215,11 +232,12 @@ public class FileLoader {
      * @param url 网络地址
      */
     public void clearTask(String url) {
-        callBackMap.remove(url);
-        Future<?> future = taskMap.get(url);
-        if (future != null) {
+        mCallBackMap.remove(url);
+        WeakReference<Future<?>> futureWeakReference = mTaskMap.get(url);
+        if (futureWeakReference != null && futureWeakReference.get() != null) {
+            Future<?> future = futureWeakReference.get();
             boolean cancel = future.cancel(true);
-            taskMap.remove(url);
+            mTaskMap.remove(url);
         }
     }
 
@@ -266,7 +284,7 @@ public class FileLoader {
                     .url(url)
                     .get()
                     .build();
-            Call call = client.newCall(build);
+            Call call = mClient.newCall(build);
             call.enqueue(new Callback() {
                 @Override
                 public void onFailure(Request request, IOException e) {
@@ -301,7 +319,7 @@ public class FileLoader {
                     .addHeader("Range", "bytes=" + lastPosition + "-" + maxLength)//断点下载需要
                     .get()
                     .build();
-            Call call = client.newCall(build);
+            Call call = mClient.newCall(build);
             call.enqueue(new Callback() {
                 @Override
                 public void onFailure(Request request, IOException e) {
@@ -322,10 +340,9 @@ public class FileLoader {
                             lastPos = 0;//请求部分网络失败
                             break;
                     }
-                    ResponseBody body = response.body();
                     InputStream inputStream = null;
                     RandomAccessFile randomAccessFile = null;
-                    try {
+                    try (ResponseBody body = response.body()) {
                         inputStream = body.byteStream();
                         String tempPath = getTempPath(url);
                         File file = new File(tempPath);
@@ -366,7 +383,6 @@ public class FileLoader {
                     } finally {
                         Utility.close(inputStream);
                         Utility.close(randomAccessFile);
-                        body.close();
                     }
                 }
             });
@@ -425,7 +441,7 @@ public class FileLoader {
                     .url(uploadUrl)
                     .post(body)
                     .build();
-            Call call = client.newCall(request);
+            Call call = mClient.newCall(request);
             call.enqueue(new Callback() {
                 Status status = null;
 
@@ -436,6 +452,9 @@ public class FileLoader {
 
                 @Override
                 public void onResponse(Response response) throws IOException {
+                    if (status == null) {
+                        status = new Status();
+                    }
                     String result = response.body().string();
                     //上传完毕
                     status.url = uploadUrl;

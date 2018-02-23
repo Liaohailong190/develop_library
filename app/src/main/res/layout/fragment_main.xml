@@ -18,13 +18,14 @@
         android:id="@+id/jni_btn"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="点我调用JNI" />
+        android:text="点我跳转ImageActivity" />
 
     <Button
         android:id="@+id/kotlin_btn"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="点我跳转KotlinActivity" />
+
     <Button
         android:id="@+id/bomb_btn"
         android:layout_width="match_parent"

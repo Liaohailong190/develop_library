@@ -1,6 +1,7 @@
 package org.liaohailong.pdftestapp.activity;
 
 import android.Manifest;
+import android.annotation.SuppressLint;
 import android.content.pm.PackageManager;
 import android.graphics.Color;
 import android.os.Bundle;
@@ -54,6 +55,7 @@ public class MainActivity extends BaseActivity {
         FileLoader.getInstance().downloadFile("http://play.22mtv.com:1010/play4/42754.mp4", new FileLoader.OnFileStatusCallBackAdapter() {
             Toast toast = null;
 
+            @SuppressLint("ShowToast")
             @Override
             public void onFileLoading(String tempFilePath, int progress) {
                 if (toast == null) {
