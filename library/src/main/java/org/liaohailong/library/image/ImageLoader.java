@@ -10,7 +10,6 @@ import android.support.annotation.DrawableRes;
 import android.support.annotation.Size;
 import android.text.TextUtils;
 import android.util.Log;
-import android.view.View;
 import android.widget.ImageView;
 
 import org.liaohailong.library.RootApplication;
@@ -47,7 +46,7 @@ public class ImageLoader {
     private static final int TIME_OUT = 1000 * 15;
     private static final String TAG = "ImageLoader";
     private static final String HTTP = "http";
-    private static final String SD_CARD = "/storage/emulated/0";
+    private static final String SD_CARD = "/storage";
 
     private ImageLoader() {
 
@@ -64,16 +63,15 @@ public class ImageLoader {
     private ImageConfig config = new ImageConfig();
 
     private static final int THREAD_POOL_SIZE = 5;//图片请求线程池数量
-    private static final Map<String, ExecutorService> EXECUTOR_POOL_MAP = new HashMap<>();//按照界面分类存储图片请求线程池
-    private static final Handler HANDLER = new ImageHandler();//回调主线程Handler
-    private static final Map<String, Set<String>> RECORD_TASK = new HashMap<>();//记录正在执行请求的任务---><展示界面，Set<图片url为标识>>
     private static final int BUFF_SIZE = 8192;//文件IO buff字节数
+    private final BitmapLruCache CACHE = new BitmapLruCache();//内存缓存
+    private final Map<String, ExecutorService> EXECUTOR_POOL_MAP = new HashMap<>();//按照界面分类存储图片请求线程池
+    private final Handler HANDLER = new ImageHandler(this);//回调主线程Handler
+    private final Map<String, Set<Recorder>> RECORD_TASK = new HashMap<>();//记录正在执行请求的任务---><展示界面，Set<图片url为标识>>
 
     public ImageConfig getConfig() {
         return config;
     }
-
-    private static final BitmapLruCache CACHE = new BitmapLruCache();
 
     public void downloadOnly(String url, ImageLoaderCallback callback) {
         downloadOnly(url, 0, 0, callback);
@@ -89,6 +87,10 @@ public class ImageLoader {
 
     public void setImage(ImageView imageView, String url, @DrawableRes int placeHolder) {
         setImage(imageView, url, placeHolder, null);
+    }
+
+    public void setImage(ImageView imageView, String url, ImageLoaderCallback callback) {
+        setImage(imageView, url, 0, callback);
     }
 
     public void setImage(ImageView imageView, String url, @DrawableRes int placeHolder, ImageLoaderCallback callback) {
@@ -131,7 +133,7 @@ public class ImageLoader {
         String fileName = getFileName(url, scaleWidth, scaleHeight);
         Bitmap bitmap = CACHE.get(fileName);
         if (bitmap != null) {
-            done(fileName, bitmap, imageView, callback);
+            done(url, fileName, bitmap, imageView, callback);
             return true;
         }
         return false;
@@ -150,38 +152,59 @@ public class ImageLoader {
         }
         //判断是否命中本地SD卡缓存
         if (diskBitmap.exists() && diskBitmap.isFile()) {
-            DiskRunnable diskRunnable = new DiskRunnable(imageView, url, diskBitmap, scaleWidth, scaleHeight, callback, getConfig());
-            submitTask(imageView, url, diskRunnable);
+            DiskRunnable diskRunnable = new DiskRunnable(imageView, url, diskBitmap, scaleWidth, scaleHeight, HANDLER, getConfig());
+            submitTask(imageView, url, callback, diskRunnable);
             return true;
         }
         return false;
     }
 
     private synchronized void getBitmapFromHttp(ImageView imageView, String url, int scaleWidth, int scaleHeight, ImageLoaderCallback callback) {
-        HttpRunnable httpRunnable = new HttpRunnable(imageView, url, getSavePath(url, scaleWidth, scaleHeight), scaleWidth, scaleHeight, callback, getConfig());
-        submitTask(imageView, url, httpRunnable);
+        HttpRunnable httpRunnable = new HttpRunnable(imageView, url, getSavePath(url, scaleWidth, scaleHeight), scaleWidth, scaleHeight, HANDLER, getConfig());
+        submitTask(imageView, url, callback, httpRunnable);
     }
 
-    private void submitTask(View view, String url, Runnable runnable) {
+    private void submitTask(ImageView view, String url, ImageLoaderCallback callback, Runnable runnable) {
+        //必须主线程
+        Utility.checkMain();
+        //必须为有效操作
         if (TextUtils.isEmpty(url)) {
             return;
         }
         String cxt = view == null ? RootApplication.getInstance().toString() : view.getContext().toString();
         //保存每次图片任务，以路径包保存标记
-        Set<String> recordSet = RECORD_TASK.get(cxt);
-        if (recordSet == null) {
-            recordSet = new HashSet<>();
-            RECORD_TASK.put(cxt, recordSet);
+        Set<Recorder> recorders = RECORD_TASK.get(url);
+        if (recorders == null) {
+            recorders = new HashSet<>();
+            RECORD_TASK.put(url, recorders);
         }
-        if (recordSet.contains(url)) {
-            recordSet.add(url);
+        //检测任务是否已开始，防止重复进行
+        if (recorders.isEmpty()) {
+            ExecutorService executorService = EXECUTOR_POOL_MAP.get(cxt);
+            if (executorService == null || executorService.isShutdown()) {
+                executorService = Executors.newFixedThreadPool(THREAD_POOL_SIZE);
+                EXECUTOR_POOL_MAP.put(cxt, executorService);
+            }
+            executorService.execute(runnable);
         }
-        ExecutorService executorService = EXECUTOR_POOL_MAP.get(cxt);
-        if (executorService == null || executorService.isShutdown()) {
-            executorService = Executors.newFixedThreadPool(THREAD_POOL_SIZE);
-            EXECUTOR_POOL_MAP.put(cxt, executorService);
+        //保存回调，当url对应的资源加载完毕之后调用
+        boolean contains = false;
+        for (Recorder recorder : recorders) {
+            Object other = null;
+            if (view != null) {
+                other = view;
+            } else if (callback != null) {
+                other = callback;
+            }
+            if (recorder.equals(other)) {
+                contains = true;
+                break;
+            }
         }
-        executorService.execute(runnable);
+        if (!contains) {
+            Recorder recorder = new Recorder(view, callback);
+            recorders.add(recorder);
+        }
     }
 
     /**
@@ -263,7 +286,7 @@ public class ImageLoader {
         return null;
     }
 
-    private static void done(String fileName, Bitmap bitmap, ImageView imageView, ImageLoaderCallback callback) {
+    private void done(String url, String fileName, Bitmap bitmap, ImageView imageView, ImageLoaderCallback callback) {
         if (bitmap == null || TextUtils.isEmpty(fileName)) {
             return;
         }
@@ -278,6 +301,15 @@ public class ImageLoader {
         //回调接口
         if (callback != null) {
             callback.onImageLoadComplete(fileName, bitmap, imageView);
+        } else {
+            //通知所有请求同一路径地址的图片完毕
+            if (RECORD_TASK.containsKey(url)) {
+                Set<Recorder> recorders = RECORD_TASK.get(url);
+                for (Recorder recorder : recorders) {
+                    recorder.done(url, bitmap);
+                }
+                RECORD_TASK.remove(url);
+            }
         }
     }
 
@@ -292,15 +324,16 @@ public class ImageLoader {
             EXECUTOR_POOL_MAP.get(key).shutdownNow();
             EXECUTOR_POOL_MAP.remove(key);
         }
-        Set<String> recordSet = RECORD_TASK.get(key);
-        if (recordSet != null) {
-            recordSet.clear();
-        }
     }
 
     private static class ImageHandler extends Handler {
         private static final int DISK_LOAD_COMPLETE = 0;//硬盘读取完毕
         private static final int HTTP_LOAD_COMPLETE = 1;//网络下载完毕
+        private WeakReference<ImageLoader> mImageLoaderWeakReference;
+
+        private ImageHandler(ImageLoader imageLoader) {
+            mImageLoaderWeakReference = new WeakReference<>(imageLoader);
+        }
 
         @Override
         public void handleMessage(Message msg) {
@@ -308,23 +341,19 @@ public class ImageLoader {
             if (holder == null) {
                 return;
             }
+            if (mImageLoaderWeakReference == null || mImageLoaderWeakReference.get() == null) {
+                holder.release();
+                return;
+            }
+            ImageLoader imageLoader = mImageLoaderWeakReference.get();
+            String url = holder.getUrl();
             switch (msg.what) {
                 case DISK_LOAD_COMPLETE:
-                    done(holder.getFileName(), holder.getBitmap(), holder.getImageView(), holder.getCallback());
+                    imageLoader.done(url, holder.getFileName(), holder.getBitmap(), holder.getImageView(), null);
                     break;
                 case HTTP_LOAD_COMPLETE:
-                    done(holder.getFileName(), holder.getBitmap(), holder.getImageView(), holder.getCallback());
+                    imageLoader.done(url, holder.getFileName(), holder.getBitmap(), holder.getImageView(), null);
                     break;
-            }
-            String url = holder.getUrl();
-            for (Map.Entry<String, Set<String>> entry : RECORD_TASK.entrySet()) {
-                Set<String> recordSet = entry.getValue();
-                if (recordSet == null) {
-                    continue;
-                }
-                if (recordSet.contains(url)) {
-                    recordSet.remove(url);
-                }
             }
             holder.release();
         }
@@ -339,17 +368,17 @@ public class ImageLoader {
         private WeakReference<File> fileWeakReference;
         private WeakReference<Integer> widthWeakReference;
         private WeakReference<Integer> heightWeakReference;
-        private WeakReference<ImageLoaderCallback> callbackWeakReference;
         private WeakReference<ImageConfig> configWeakReference;
+        private WeakReference<Handler> handlerWeakReference;
 
-        private DiskRunnable(ImageView imageView, String url, File file, int scaleWidth, int scaleHeight, ImageLoaderCallback callback, ImageConfig config) {
+        private DiskRunnable(ImageView imageView, String url, File file, int scaleWidth, int scaleHeight, Handler handler, ImageConfig config) {
             imageViewWeakReference = new WeakReference<>(imageView);
             urlWeakReference = new WeakReference<>(url);
             fileWeakReference = new WeakReference<>(file);
             widthWeakReference = new WeakReference<>(scaleWidth);
             heightWeakReference = new WeakReference<>(scaleHeight);
-            callbackWeakReference = new WeakReference<>(callback);
             configWeakReference = new WeakReference<>(config);
+            handlerWeakReference = new WeakReference<>(handler);
         }
 
         @Override
@@ -359,15 +388,14 @@ public class ImageLoader {
             File file = fileWeakReference.get();
             Integer width = widthWeakReference.get();
             Integer height = heightWeakReference.get();
-            ImageLoaderCallback callback = callbackWeakReference.get();
             ImageConfig config = configWeakReference.get();
             if (file == null || config == null || url == null || width < 1 || height < 1) {
                 return;
             }
-            getImage(imageView, url, file, width, height, callback, config);
+            getImage(imageView, url, file, width, height, config);
         }
 
-        protected void getImage(ImageView imageView, String url, File file, Integer width, Integer height, ImageLoaderCallback callback, ImageConfig config) {
+        protected void getImage(ImageView imageView, String url, File file, Integer width, Integer height, ImageConfig config) {
             String path = file.getAbsolutePath();
             BitmapFactory.Options options = getBitmapOption(path, width, height);
 
@@ -388,18 +416,21 @@ public class ImageLoader {
             if (bitmap == null) {
                 return;
             }
-            send2Handler(imageView, url, bitmap, callback, path, ImageHandler.DISK_LOAD_COMPLETE);
+            send2Handler(imageView, url, bitmap, path, ImageHandler.DISK_LOAD_COMPLETE);
         }
 
-        protected void send2Handler(ImageView imageView, String url, Bitmap bitmap, ImageLoaderCallback callback, String path, int flag) {
+        void send2Handler(ImageView imageView, String url, Bitmap bitmap, String path, int flag) {
+            if (handlerWeakReference == null || handlerWeakReference.get() == null) {
+                return;
+            }
             String[] split = path.split("/");
             Holder holder = new Holder()
                     .setImageView(imageView)
                     .setUrl(url)
-                    .setCallback(callback)
                     .setFileName(split[split.length - 1])
                     .setBitmap(bitmap);
-            Message message = HANDLER.obtainMessage();
+            Handler handler = handlerWeakReference.get();
+            Message message = handler.obtainMessage();
             message.what = flag;
             message.obj = holder;
             message.sendToTarget();
@@ -413,12 +444,12 @@ public class ImageLoader {
         private static final String PNG = "image/png";
         private static final String JPG = "image/jpeg";
 
-        private HttpRunnable(ImageView imageView, String url, File file, int scaleWidth, int scaleHeight, ImageLoaderCallback callback, ImageConfig config) {
-            super(imageView, url, file, scaleWidth, scaleHeight, callback, config);
+        private HttpRunnable(ImageView imageView, String url, File file, int scaleWidth, int scaleHeight, Handler handler, ImageConfig config) {
+            super(imageView, url, file, scaleWidth, scaleHeight, handler, config);
         }
 
         @Override
-        protected void getImage(ImageView imageView, String url, File file, Integer width, Integer height, ImageLoaderCallback callback, ImageConfig config) {
+        protected void getImage(ImageView imageView, String url, File file, Integer width, Integer height, ImageConfig config) {
             String path = file.getAbsolutePath();
             Bitmap bitmap = null;
             String[] mimeTypeHolder = new String[1];
@@ -441,7 +472,7 @@ public class ImageLoader {
             }
             //保存图片至本地
             save2Disk(bitmap, file, mimeTypeHolder[0]);
-            send2Handler(imageView, url, bitmap, callback, path, ImageHandler.HTTP_LOAD_COMPLETE);
+            send2Handler(imageView, url, bitmap, path, ImageHandler.HTTP_LOAD_COMPLETE);
         }
 
         private byte[] getRawDataFromHttp(String url, @Size(1) String[] mimeTypeHolder) throws InterruptedIOException {
@@ -574,15 +605,6 @@ public class ImageLoader {
             return this;
         }
 
-        private ImageLoaderCallback getCallback() {
-            return callback != null && callback.get() != null ? callback.get() : null;
-        }
-
-        private Holder setCallback(ImageLoaderCallback callback) {
-            this.callback = new WeakReference<>(callback);
-            return this;
-        }
-
         private void release() {
             if (imageView != null) {
                 imageView.clear();
@@ -595,6 +617,51 @@ public class ImageLoader {
             if (callback != null) {
                 callback.clear();
                 callback = null;
+            }
+        }
+    }
+
+    private static class Recorder {
+        private WeakReference<ImageView> imageViewWeakReference;
+        private WeakReference<ImageLoaderCallback> imageLoaderCallbackWeakReference;
+
+        private Recorder(ImageView imageView, ImageLoaderCallback imageLoaderCallback) {
+            imageViewWeakReference = new WeakReference<>(imageView);
+            imageLoaderCallbackWeakReference = new WeakReference<>(imageLoaderCallback);
+        }
+
+        @Override
+        public boolean equals(Object obj) {
+            if (obj instanceof ImageView) {
+                if (imageViewWeakReference == null || imageViewWeakReference.get() == null) {
+                    return false;
+                }
+                ImageView imageView = imageViewWeakReference.get();
+                ImageView other = (ImageView) obj;
+                if (other == imageView) {
+                    return true;
+                }
+            } else if (obj instanceof ImageLoaderCallback) {
+                if (imageLoaderCallbackWeakReference == null || imageLoaderCallbackWeakReference.get() == null) {
+                    return false;
+                }
+                ImageLoaderCallback other = (ImageLoaderCallback) obj;
+                ImageLoaderCallback loaderCallback = imageLoaderCallbackWeakReference.get();
+                if (other == loaderCallback) {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        private void done(String url, Bitmap bitmap) {
+            if (imageViewWeakReference != null && imageViewWeakReference.get() != null) {
+                ImageView imageView = imageViewWeakReference.get();
+                imageView.setImageBitmap(bitmap);
+            }
+            if (imageLoaderCallbackWeakReference != null && imageLoaderCallbackWeakReference.get() != null) {
+                ImageLoaderCallback loaderCallback = imageLoaderCallbackWeakReference.get();
+                loaderCallback.onImageLoadComplete(url, bitmap, imageViewWeakReference != null && imageViewWeakReference.get() != null ? imageViewWeakReference.get() : null);
             }
         }
     }

@@ -12,6 +12,11 @@ import org.liaohailong.pdftestapp.model.Student;
 
 public class VictorApplication extends RootApplication {
 
+    /**
+     * 数据库建表
+     */
+    private final Class[] SQL_TABLE = new Class[]{Student.class};
+
     @Override
     public void onCreate() {
         super.onCreate();
@@ -22,6 +27,6 @@ public class VictorApplication extends RootApplication {
 
     @Override
     public Class[] getTableClasses() {
-        return new Class[]{Student.class};
+        return SQL_TABLE;
     }
 }

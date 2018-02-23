@@ -24,6 +24,7 @@
         <activity android:name=".activity.PdfActivity" />
         <activity android:name=".activity.KotlinActivity" />
         <activity android:name=".activity.BoomActivity" />
+        <activity android:name=".activity.ImageActivity" />
     </application>
 
 </manifest>
