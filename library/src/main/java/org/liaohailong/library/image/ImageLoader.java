@@ -81,6 +81,26 @@ public class ImageLoader {
         setImage(null, url, 0, scaleWidth, scaleHeight, callback);
     }
 
+    public void setImagePerformance(ImageView imageView, String url, boolean performance) {
+        setImagePerformance(imageView, url, 0, performance);
+    }
+
+    public void setImagePerformance(ImageView imageView, String url, @DrawableRes int placeHolder, boolean performance) {
+        setImagePerformance(imageView, url, placeHolder, 0, 0, performance);
+    }
+
+    public void setImagePerformance(ImageView imageView, String url, @DrawableRes int placeHolder, int scaleWidth, int scaleHeight, boolean performance) {
+        setImagePerformance(imageView, url, placeHolder, scaleWidth, scaleHeight, performance, null);
+    }
+
+    public void setImagePerformance(ImageView imageView, String url, @DrawableRes int placeHolder, int scaleWidth, int scaleHeight, boolean performance, ImageLoaderCallback callback) {
+        if (performance) {
+            setPlaceHolder(imageView, placeHolder);
+        } else {
+            setImage(imageView, url, placeHolder, scaleWidth, scaleHeight, callback);
+        }
+    }
+
     public void setImage(ImageView imageView, String url) {
         setImage(imageView, url, 0);
     }
