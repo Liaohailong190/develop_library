@@ -13,13 +13,18 @@ import android.view.View;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import org.liaohailong.library.image.ImageConfig;
+import org.liaohailong.library.image.ImageLoader;
 import org.liaohailong.library.inject.BindContentView;
 import org.liaohailong.library.inject.BindView;
 import org.liaohailong.library.inject.OnClick;
 import org.liaohailong.library.inject.OnLongClick;
+import org.liaohailong.library.util.FileUtil;
 import org.liaohailong.library.util.PermissionUtil;
+import org.liaohailong.library.util.ToastUtil;
 import org.liaohailong.library.widget.FileLoader;
 import org.liaohailong.pdftestapp.BaseActivity;
+import org.liaohailong.pdftestapp.C;
 import org.liaohailong.pdftestapp.R;
 import org.liaohailong.pdftestapp.fragment.MainFragment;
 
@@ -51,28 +56,27 @@ public class MainActivity extends BaseActivity {
         }
     }
 
+    private FileLoader.OnFileStatusCallBack mOnFileStatusCallBack = new FileLoader.OnFileStatusCallBackAdapter() {
+
+        @Override
+        public void onFileLoading(String tempFilePath, int progress) {
+            ToastUtil.show("文件下载 进度---> progress = " + progress);
+        }
+
+        @Override
+        public void onFileDownLoadComplete(String path) {
+            ToastUtil.show("文件下载完毕 path + " + path);
+        }
+    };
+
     private void downloadFile() {
-        FileLoader.getInstance().downloadFile("http://play.22mtv.com:1010/play4/42754.mp4", new FileLoader.OnFileStatusCallBackAdapter() {
-            Toast toast = null;
-
-            @SuppressLint("ShowToast")
-            @Override
-            public void onFileLoading(String tempFilePath, int progress) {
-                if (toast == null) {
-                    toast = Toast.makeText(MainActivity.this, "", Toast.LENGTH_SHORT);
-                }
-                toast.setText("文件下载 进度---> progress = " + progress);
-                toast.show();
-            }
-
-            @Override
-            public void onFileDownLoadComplete(String path) {
-                if (toast != null) {
-                    toast.setText("文件下载完毕 path + " + path);
-                    toast.show();
-                }
-            }
-        });
+        //初始化文件夹位置需要在SD卡存储权限获取之后再进行配置 Android6.0
+        String directory = FileUtil.getRootDirectory(C.name.cache_name);
+        ImageConfig config = ImageLoader.instance.getConfig();
+        config.setCacheDirectory(directory);
+        FileLoader.getInstance().initDirectory(directory);
+        //下载一个短视频
+        FileLoader.getInstance().downloadFile("http://play.22mtv.com:1010/play4/42754.mp4", mOnFileStatusCallBack);
     }
 
     @OnClick({R.id.btn_01, R.id.btn_02})
@@ -87,9 +91,7 @@ public class MainActivity extends BaseActivity {
                 break;
         }
         Toast.makeText(this, toast, Toast.LENGTH_LONG).show();
-        if (textView != null) {
-            textView.setText(toast);
-        }
+        textView.setText(toast);
     }
 
     @OnClick(R.id.btn_03)

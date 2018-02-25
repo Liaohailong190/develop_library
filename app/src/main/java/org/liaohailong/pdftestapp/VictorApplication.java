@@ -1,8 +1,8 @@
 package org.liaohailong.pdftestapp;
 
+import com.squareup.leakcanary.LeakCanary;
+
 import org.liaohailong.library.RootApplication;
-import org.liaohailong.library.image.ImageConfig;
-import org.liaohailong.library.image.ImageLoader;
 import org.liaohailong.pdftestapp.model.Student;
 
 /**
@@ -20,9 +20,12 @@ public class VictorApplication extends RootApplication {
     @Override
     public void onCreate() {
         super.onCreate();
-        ImageConfig config = ImageLoader.instance.getConfig();
-        String directory = "/storage/emulated/0/victor/";
-        config.setCacheDirectory(directory);
+        if (LeakCanary.isInAnalyzerProcess(this)) {
+            // This process is dedicated to LeakCanary for heap analysis.
+            // You should not init your app in this process.
+            return;
+        }
+        LeakCanary.install(this);
     }
 
     @Override

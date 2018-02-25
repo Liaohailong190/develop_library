@@ -32,7 +32,6 @@ import java.lang.ref.WeakReference;
 import java.net.HttpURLConnection;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.WeakHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
@@ -52,7 +51,7 @@ public class FileLoader {
     private static final int THREAD_POOL_SIZE = 5;
     private String mDirectory;
     private static final String TEMP = ".temp";
-    private WeakHashMap<String, OnFileStatusCallBack> mCallBackMap = new WeakHashMap<>();
+    private Map<String, WeakReference<OnFileStatusCallBack>> mCallBackMap = new HashMap<>();
     private Map<String, WeakReference<Future<?>>> mTaskMap = new HashMap<>();
     private final OkHttpClient mClient;
     private final ExecutorService mExecutor;
@@ -61,7 +60,11 @@ public class FileLoader {
         @Override
         public void handleMessage(Message msg) {
             Status status = (Status) msg.obj;
-            OnFileStatusCallBack callBack = mCallBackMap.get(status.url);
+            WeakReference<OnFileStatusCallBack> onFileStatusCallBackWeakReference = mCallBackMap.get(status.url);
+            if (onFileStatusCallBackWeakReference == null) {
+                return;
+            }
+            OnFileStatusCallBack callBack = onFileStatusCallBackWeakReference.get();
             if (callBack == null) {
                 return;
             }
@@ -134,13 +137,8 @@ public class FileLoader {
             }
         }
         //从网络下载
-        if (mTaskMap.get(url) == null) {
-            DownLoadFileRunnable runnable = new DownLoadFileRunnable(url);
-            mCallBackMap.put(url, callBack);
-            Future<?> submit = mExecutor.submit(runnable);
-            WeakReference<Future<?>> futureWeakReference = new WeakReference<Future<?>>(submit);
-            mTaskMap.put(url, futureWeakReference);
-        }
+        DownLoadFileRunnable runnable = new DownLoadFileRunnable(url);
+        submit(url, callBack, runnable);
     }
 
     /**
@@ -152,9 +150,22 @@ public class FileLoader {
      */
     public void upLoadFile(String url, Map<String, Object> params, OnFileStatusCallBack callBack) {
         //网络上传
+        UpLoadFileRunnable runnable = new UpLoadFileRunnable(url, params);
+        submit(url, callBack, runnable);
+    }
+
+    /**
+     * 提交文件处理任务
+     * 同时保证不提交重复任务
+     *
+     * @param url      文件下载/上传的路径
+     * @param callBack 文件下载/上传的当前状态
+     * @param runnable 执行任务
+     */
+    private void submit(String url, OnFileStatusCallBack callBack, Runnable runnable) {
         if (mTaskMap.get(url) == null) {
-            UpLoadFileRunnable runnable = new UpLoadFileRunnable(url, params);
-            mCallBackMap.put(url, callBack);
+            WeakReference<OnFileStatusCallBack> onFileStatusCallBackWeakReference = new WeakReference<>(callBack);
+            mCallBackMap.put(url, onFileStatusCallBackWeakReference);
             Future<?> submit = mExecutor.submit(runnable);
             WeakReference<Future<?>> futureWeakReference = new WeakReference<Future<?>>(submit);
             mTaskMap.put(url, futureWeakReference);
@@ -214,30 +225,30 @@ public class FileLoader {
 
     /**
      * 终止任务，必须在主线程调用
-     */
-    public void clearAllTask() {
-        mCallBackMap.clear();
-        for (Map.Entry<String, WeakReference<Future<?>>> entry : mTaskMap.entrySet()) {
-            WeakReference<Future<?>> value = entry.getValue();
-            if (value != null && value.get() != null) {
-                value.get().cancel(true);
-            }
-        }
-        mTaskMap.clear();
-    }
-
-    /**
-     * 终止任务，必须在主线程调用
      *
      * @param url 网络地址
      */
     public void clearTask(String url) {
-        mCallBackMap.remove(url);
-        WeakReference<Future<?>> futureWeakReference = mTaskMap.get(url);
-        if (futureWeakReference != null && futureWeakReference.get() != null) {
-            Future<?> future = futureWeakReference.get();
-            boolean cancel = future.cancel(true);
-            mTaskMap.remove(url);
+        //必须在主线程调用
+        Utility.checkMain();
+        //参数为空表示清空所有
+        if (TextUtils.isEmpty(url)) {
+            mCallBackMap.clear();
+            for (Map.Entry<String, WeakReference<Future<?>>> entry : mTaskMap.entrySet()) {
+                WeakReference<Future<?>> value = entry.getValue();
+                if (value != null && value.get() != null) {
+                    value.get().cancel(true);
+                }
+            }
+            mTaskMap.clear();
+        } else {
+            mCallBackMap.remove(url);
+            WeakReference<Future<?>> futureWeakReference = mTaskMap.get(url);
+            if (futureWeakReference != null && futureWeakReference.get() != null) {
+                Future<?> future = futureWeakReference.get();
+                boolean cancel = future.cancel(true);
+                mTaskMap.remove(url);
+            }
         }
     }
 

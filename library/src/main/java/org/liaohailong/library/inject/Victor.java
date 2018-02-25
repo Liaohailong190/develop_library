@@ -323,7 +323,18 @@ public class Victor {
         }
 
         private View findViewById(int id) {
-            return container == null || container.get() == null ? null : container.get().findViewById(id);
+            if (container == null) {
+                return null;
+            }
+            View view = container.get();
+            if (view == null) {
+                return null;
+            }
+            View target = view.findViewById(id);
+            if (target == null) {
+                return null;
+            }
+            return target;
         }
 
         private Object getOwner() {

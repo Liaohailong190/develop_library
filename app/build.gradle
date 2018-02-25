@@ -34,4 +34,6 @@ dependencies {
     //pdf相关
     compile 'com.github.barteksc:pdfium-android:1.7.0'
     compile "org.jetbrains.kotlin:kotlin-stdlib-jre7:$kotlin_version"
+    //内存泄漏检查相关
+    debugImplementation 'com.squareup.leakcanary:leakcanary-android:1.5.4'
 }

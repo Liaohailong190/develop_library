@@ -21,13 +21,12 @@ public class ToastUtil {
 
     public static void show(String msg) {
         if (mToast == null) {
-            mToast = Toast.makeText(RootApplication.getInstance(), msg, Toast.LENGTH_SHORT);
+            mToast = Toast.makeText(RootApplication.getInstance().getApplicationContext(), msg, Toast.LENGTH_SHORT);
             mToast.show();
         } else {
             mToast.setText(msg);
             mToast.setDuration(Toast.LENGTH_SHORT);
             mToast.show();
         }
-
     }
 }

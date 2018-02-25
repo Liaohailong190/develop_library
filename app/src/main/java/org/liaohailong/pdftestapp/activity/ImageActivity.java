@@ -31,7 +31,7 @@ public class ImageActivity extends BaseActivity {
         context.startActivity(intent);
     }
 
-    @BindView(R.id.recycler_view)
+    @BindView(R.id.image_list)
     private RecyclerView mRecyclerView;
 
     @Override
