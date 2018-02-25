@@ -20,7 +20,7 @@ public class VictorApplication extends RootApplication {
     @Override
     public void onCreate() {
         super.onCreate();
-        ImageConfig config = ImageLoader.getInstance().getConfig();
+        ImageConfig config = ImageLoader.instance.getConfig();
         String directory = "/storage/emulated/0/victor/";
         config.setCacheDirectory(directory);
     }

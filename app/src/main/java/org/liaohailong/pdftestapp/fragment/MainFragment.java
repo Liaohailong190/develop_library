@@ -141,6 +141,6 @@ public class MainFragment extends BaseFragment {
     private void showImage(View view) {
         String url = urls[imageUrlIndex % urls.length];
         imageUrlIndex++;
-        ImageLoader.getInstance().setImage(avatar, url);
+        ImageLoader.instance.setImage(avatar, url);
     }
 }

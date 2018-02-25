@@ -78,7 +78,7 @@ public class ImageActivity extends BaseActivity {
             }
             if (itemView instanceof ImageView) {
                 ImageView imageView = (ImageView) itemView;
-                ImageLoader.getInstance().setImage(imageView, imageUrl01, 0, new ImageLoaderCallback() {
+                ImageLoader.instance.setImage(imageView, imageUrl01, 0, new ImageLoaderCallback() {
                     @Override
                     public void onImageLoadComplete(String url, Bitmap bitmap, ImageView imageView) {
                         ToastUtil.show("图片加载完毕 url = " + url);

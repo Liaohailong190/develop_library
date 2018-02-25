@@ -42,23 +42,19 @@ import java.util.concurrent.Executors;
  * Created by LHL on 2017/9/10.
  */
 
-public class ImageLoader {
+public enum ImageLoader {
+    /*
+    * 枚举维护单例：
+    * 1，防止反射实例化。
+    * 2，防止序列化、反序列化过程中实例化。
+    * 3，线程安全。
+    * */
+    instance;
+
     private static final int TIME_OUT = 1000 * 15;
     private static final String TAG = "ImageLoader";
     private static final String HTTP = "http";
     private static final String SD_CARD = "/storage";
-
-    private ImageLoader() {
-
-    }
-
-    private static final class SingletonHolder {
-        private static final ImageLoader INSTANCE = new ImageLoader();
-    }
-
-    public static ImageLoader getInstance() {
-        return SingletonHolder.INSTANCE;
-    }
 
     private ImageConfig config = new ImageConfig();
 
