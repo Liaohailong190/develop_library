@@ -7,7 +7,6 @@ import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.view.View;
 
-import org.liaohailong.library.inject.BindContentView;
 import org.liaohailong.library.inject.BindView;
 import org.liaohailong.library.inject.OnClick;
 import org.liaohailong.pdftestapp.BaseActivity;
@@ -18,7 +17,6 @@ import org.liaohailong.pdftestapp.widget.pdf.PdfView;
  * 展示PDF的界面
  * Created by LHL on 2017/9/13.
  */
-@BindContentView(R.layout.activity_pdf)
 public class PdfActivity extends BaseActivity {
     public static void show(Context context) {
         Intent intent = new Intent(context, PdfActivity.class);
@@ -31,6 +29,7 @@ public class PdfActivity extends BaseActivity {
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_pdf);
         pdfView.fromAsset("sample.pdf")
                 .setOrientation(PdfView.VERTICAL)
                 .setDefaultPage(0)

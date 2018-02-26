@@ -15,13 +15,16 @@ import org.liaohailong.library.inject.Victor;
  * Created by LHL on 2017/9/6.
  */
 
-public class RootFragment extends Fragment {
+public abstract class RootFragment extends Fragment {
 
     @Nullable
     @Override
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
-        return Victor.inject(this, inflater, container, savedInstanceState);
+        View view = onCreateContentView(inflater, container, savedInstanceState);
+        return Victor.inject(this, view, savedInstanceState);
     }
+
+    protected abstract View onCreateContentView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState);
 
     @Override
     public void onSaveInstanceState(Bundle outState) {

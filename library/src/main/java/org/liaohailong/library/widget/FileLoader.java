@@ -135,6 +135,7 @@ public class FileLoader {
             if (callBack != null) {
                 callBack.onFileDownLoadComplete(path);
             }
+            return;
         }
         //从网络下载
         DownLoadFileRunnable runnable = new DownLoadFileRunnable(url);

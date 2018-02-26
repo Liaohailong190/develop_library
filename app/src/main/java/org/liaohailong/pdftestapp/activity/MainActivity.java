@@ -1,7 +1,6 @@
 package org.liaohailong.pdftestapp.activity;
 
 import android.Manifest;
-import android.annotation.SuppressLint;
 import android.content.pm.PackageManager;
 import android.graphics.Color;
 import android.os.Bundle;
@@ -15,7 +14,6 @@ import android.widget.Toast;
 
 import org.liaohailong.library.image.ImageConfig;
 import org.liaohailong.library.image.ImageLoader;
-import org.liaohailong.library.inject.BindContentView;
 import org.liaohailong.library.inject.BindView;
 import org.liaohailong.library.inject.OnClick;
 import org.liaohailong.library.inject.OnLongClick;
@@ -34,7 +32,6 @@ import java.util.Random;
  * 点击事件测试
  * Created by LHL on 2017/9/5.
  */
-@BindContentView(R.layout.activity_main)
 public class MainActivity extends BaseActivity {
     private static int[] COLORS = new int[]{Color.RED, Color.GREEN, Color.BLUE};
     private static final String PERMISSION_WRITE_EXTERNAL_STORAGE = Manifest.permission.WRITE_EXTERNAL_STORAGE;
@@ -51,6 +48,7 @@ public class MainActivity extends BaseActivity {
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_main);
         if (PermissionUtil.requestPermissionIfNeed(this, PERMISSION_WRITE_EXTERNAL_STORAGE, "", REQUEST_WRITE_EXTERNAL_STORAGE)) {
             downloadFile();
         }

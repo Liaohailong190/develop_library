@@ -1,9 +1,10 @@
 package org.liaohailong.library;
 
 import android.os.Bundle;
-import android.os.PersistableBundle;
 import android.support.annotation.Nullable;
 import android.support.v7.app.AppCompatActivity;
+import android.view.View;
+import android.view.ViewGroup;
 
 import org.liaohailong.library.http.Http;
 import org.liaohailong.library.image.ImageLoader;
@@ -18,7 +19,25 @@ public class RootActivity extends AppCompatActivity {
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        Victor.inject(this, savedInstanceState);
+        Victor.injectSaveState(this, savedInstanceState);
+    }
+
+    @Override
+    public void setContentView(View view) {
+        super.setContentView(view);
+        Victor.injectViewAndEvent(this);
+    }
+
+    @Override
+    public void setContentView(int layoutResID) {
+        super.setContentView(layoutResID);
+        Victor.injectViewAndEvent(this);
+    }
+
+    @Override
+    public void setContentView(View view, ViewGroup.LayoutParams params) {
+        super.setContentView(view, params);
+        Victor.injectViewAndEvent(this);
     }
 
     @Override

@@ -2,7 +2,9 @@ package org.liaohailong.pdftestapp.fragment;
 
 import android.os.Bundle;
 import android.support.annotation.Nullable;
+import android.view.LayoutInflater;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -16,7 +18,6 @@ import org.liaohailong.library.db.OrmDao;
 import org.liaohailong.library.http.Http;
 import org.liaohailong.library.http.HttpCallback;
 import org.liaohailong.library.image.ImageLoader;
-import org.liaohailong.library.inject.BindContentView;
 import org.liaohailong.library.inject.BindView;
 import org.liaohailong.library.inject.OnClick;
 import org.liaohailong.library.inject.SaveState;
@@ -38,7 +39,6 @@ import java.util.List;
  * 测试的fragment
  * Created by LHL on 2017/9/6.
  */
-@BindContentView(R.layout.fragment_main)
 public class MainFragment extends BaseFragment {
     @BindView(R.id.text_fragment)
     private TextView textView;
@@ -69,6 +69,11 @@ public class MainFragment extends BaseFragment {
             return text;
         }
     };
+
+    @Override
+    protected View onCreateContentView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
+        return inflater.inflate(R.layout.fragment_main, container, false);
+    }
 
     @Override
     public void onViewCreated(View view, @Nullable Bundle savedInstanceState) {

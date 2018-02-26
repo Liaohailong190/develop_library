@@ -13,7 +13,6 @@ import android.widget.ImageView;
 
 import org.liaohailong.library.image.ImageLoader;
 import org.liaohailong.library.image.ImageLoaderCallback;
-import org.liaohailong.library.inject.BindContentView;
 import org.liaohailong.library.inject.BindView;
 import org.liaohailong.library.util.ToastUtil;
 import org.liaohailong.pdftestapp.BaseActivity;
@@ -24,7 +23,6 @@ import org.liaohailong.pdftestapp.R;
  * Created by LHL on 2018/2/23.
  */
 
-@BindContentView(R.layout.activity_image)
 public class ImageActivity extends BaseActivity {
     public static void show(Context context) {
         Intent intent = new Intent(context, ImageActivity.class);
@@ -37,7 +35,7 @@ public class ImageActivity extends BaseActivity {
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
+        setContentView(R.layout.activity_image);
         mRecyclerView.setLayoutManager(new LinearLayoutManager(this));
         mRecyclerView.setAdapter(new CustomAdapter());
     }

@@ -9,6 +9,6 @@ import org.liaohailong.library.RootFragment;
  * Created by LHL on 2017/9/6.
  */
 
-public class BaseFragment extends RootFragment {
+public abstract class BaseFragment extends RootFragment {
 
 }
