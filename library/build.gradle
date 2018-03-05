@@ -40,7 +40,7 @@ dependencies {
     compile 'com.android.support:recyclerview-v7:26.1.0'
     //请求网络相关
     compile 'com.squareup.okhttp:okhttp:2.4.0'
-    compile 'com.squareup.okio:okio:1.11.0'
+    compile 'com.squareup.okio:okio:1.14.0'
     compile "org.jetbrains.kotlin:kotlin-stdlib-jre7:$kotlin_version"
 }
 repositories {
