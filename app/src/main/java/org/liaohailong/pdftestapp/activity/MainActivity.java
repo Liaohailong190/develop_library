@@ -93,9 +93,8 @@ public class MainActivity extends BaseActivity {
     }
 
     @OnClick(R.id.btn_03)
-    public void changeColor(View view) {
-        int i = random.nextInt(COLORS.length);
-        textView.setTextColor(COLORS[i]);
+    public void jump2Camera(View view) {
+        CameraActivity.show(view.getContext());
     }
 
     @OnLongClick(R.id.btn_04)

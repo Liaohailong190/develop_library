@@ -27,7 +27,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:gravity="center"
-            android:text="点我变色" />
+            android:text="跳转自定义相机界面" />
 
         <Button
             android:id="@+id/btn_04"
