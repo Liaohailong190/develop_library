@@ -150,7 +150,7 @@ public final class CameraUtil {
         return simpleDateFormat.format(date);
     }
 
-    public static boolean requestCameraPermissionIfNeed(Activity activity) {
+    static boolean requestCameraPermissionIfNeed(Activity activity) {
         return requestPermissionIfNeed(
                 activity,
                 new String[]{Manifest.permission.CAMERA},

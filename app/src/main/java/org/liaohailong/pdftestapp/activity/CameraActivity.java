@@ -30,12 +30,14 @@ public class CameraActivity extends BaseActivity implements View.OnClickListener
         context.startActivity(intent);
     }
 
-    private static final String mSavePath = Environment.getExternalStorageDirectory() + "/" + "camera_test";
-    private SurfaceView mSurfaceView;
-    private ImageView mImageView;
-    private Button mRecordBtn;
+    private static final String mSavePath = Environment.getExternalStorageDirectory() + "/" + "camera_test";//相机拍照/录像缓存路径
+    private SurfaceView mSurfaceView;//预览界面
+    private ImageView mImageView;//拍照图片展示
+    private Button mRecordBtn;//录制按钮
 
+    //相机操作类
     private CameraHelper mCameraHelper;
+    //相机操作数据回调
     private CameraOptCallback mCameraOptCallback = new CameraOptCallbackAdapter() {
         @Override
         public void onPictureComplete(String path, Bitmap bitmap) {
@@ -57,22 +59,41 @@ public class CameraActivity extends BaseActivity implements View.OnClickListener
         setContentView(R.layout.activity_camera);
         mSurfaceView = findViewById(R.id.surface_view);
         mImageView = findViewById(R.id.avatar_img);
-        View mSwitchBtn = findViewById(R.id.switch_btn);
-        View mShotBtn = findViewById(R.id.shot_btn);
+        View switchBtn = findViewById(R.id.switch_btn);
+        View shotBtn = findViewById(R.id.shot_btn);
         mRecordBtn = findViewById(R.id.record_btn);
         resetRecordStatus();
 
         mSurfaceView.setOnClickListener(this);
         mImageView.setOnClickListener(this);
-        mSwitchBtn.setOnClickListener(this);
-        mShotBtn.setOnClickListener(this);
+        switchBtn.setOnClickListener(this);
+        shotBtn.setOnClickListener(this);
         mRecordBtn.setOnClickListener(this);
 
         initCamera();
     }
 
+    /**
+     * 重置录像按钮的状态
+     */
     private void resetRecordStatus() {
         mRecordBtn.setText("开始录像");
+    }
+
+    /**
+     * 初始化相机操作类
+     * build()方法一旦调用，就会启用相机
+     */
+    private void initCamera() {
+        if (mCameraHelper == null) {
+            mCameraHelper = new CameraHelper.Builder()
+                    .setActivity(this)
+                    .setSurfaceView(mSurfaceView)
+                    .setAutoFocus(true)//默认开启，3秒一次对焦
+                    .setCameraOptCallback(mCameraOptCallback)//相机操作回调
+                    .setDirectoryPath(mSavePath)//缓存路径
+                    .build();
+        }
     }
 
     @Override
@@ -100,50 +121,38 @@ public class CameraActivity extends BaseActivity implements View.OnClickListener
         }
     }
 
-    private void initCamera() {
-        if (mCameraHelper == null) {
-            mCameraHelper = new CameraHelper.Builder()
-                    .setActivity(this)
-                    .setSurfaceView(mSurfaceView)
-                    .setAutoFocus(true)
-                    .setCameraOptCallback(mCameraOptCallback)
-                    .setDirectoryPath(mSavePath)
-                    .build();
-        }
-    }
-
     @Override
     public void onClick(View v) {
         switch (v.getId()) {
-            case R.id.surface_view:
+            case R.id.surface_view://手动对焦
                 if (mCameraHelper != null) {
                     mCameraHelper.focus();
                 }
                 break;
-            case R.id.avatar_img:
+            case R.id.avatar_img://重置预览图
                 if (mImageView != null) {
                     mImageView.setImageBitmap(null);
                 }
                 break;
-            case R.id.switch_btn:
+            case R.id.switch_btn://切换前后置摄像头
                 if (mCameraHelper != null) {
                     mCameraHelper.switchCamera();
                     resetRecordStatus();
                 }
                 break;
-            case R.id.shot_btn:
+            case R.id.shot_btn://拍照
                 if (mCameraHelper != null) {
                     mCameraHelper.takePicture();
                 }
                 break;
-            case R.id.record_btn:
+            case R.id.record_btn://录像
                 if (mCameraHelper != null) {
                     if (mCameraHelper.isRecording()) {
                         mCameraHelper.stopRecorder();
                         mRecordBtn.setText("开始录像");
                     } else {
                         if (mCameraHelper.startRecorder()) {
-                            mRecordBtn.setText("停止录像");
+                            mRecordBtn.setText("结束录像");
                         }
                     }
                 }

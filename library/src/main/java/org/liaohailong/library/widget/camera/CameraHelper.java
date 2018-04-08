@@ -19,20 +19,48 @@ import java.util.List;
 
 /**
  * Describe as : 相机开启协助类
- * 预览界面的Activity，无需screenOrientation
+ * <p>
+ * 相机宽高与界面宽高关系↓
+ * <p>
+ * displayWidth
+ * //////////////////////
+ * /                    /
+ * /                    /
+ * /                    /
+ * /                    /
+ * /                    /
+ * /       portrait     /  displayHeight
+ * /                    /
+ * /                    /
+ * /                    /
+ * /                    /
+ * //////////////////////
+ * <p>
+ * displayWidth
+ * ////////////////////////////////
+ * /                              /
+ * /                              /
+ * /          landscape           /  displayHeight
+ * /                              /
+ * /                              /
+ * ////////////////////////////////
+ * <p>
+ * 预览界面的Activity，无需在AndroidManifest.xml中设置screenOrientation.
  * Created by LHL on 2018/4/7.
  */
 
 public final class CameraHelper {
     private static final String TAG = "CameraHelper";
-
+    //权限请求相关
     static final int REQUEST_CAMERA_PERMISSION_CODE = 0x001;
     static final int REQUEST_WRITE_EXTERNAL_STORAGE_PERMISSION_CODE = 0x002;
     static final int REQUEST_RECORD_AUDIO_PERMISSION_CODE = 0x003;
 
+    //相机配置相关
     private Camera mCamera;
     private Camera.Parameters mParameters;
 
+    //基本信息相关
     private WeakReference<Activity> mActivityWeak;
     private Camera.PreviewCallback mPreviewCallback;
     private SurfaceView mSurfaceView;
@@ -44,7 +72,6 @@ public final class CameraHelper {
     private Bitmap.CompressFormat mCompressFormat = Bitmap.CompressFormat.PNG;
     private CameraOptCallback mCameraOptCallback;
     private boolean isAutoFocus = true;
-
     private Runnable mAutoFocusRunnable = new Runnable() {
         @Override
         public void run() {
@@ -66,6 +93,9 @@ public final class CameraHelper {
     private boolean isRecording = false;
     private MediaRecorder mMediaRecorder;
     private String mRecordFilePath;
+
+    //日志输入相关
+    private boolean logEnable = true;
 
     private CameraHelper(Activity activity, SurfaceView surfaceView) {
         mActivityWeak = new WeakReference<>(activity);
@@ -89,6 +119,12 @@ public final class CameraHelper {
                 onStop();
             }
         });
+    }
+
+    private void log(String msg) {
+        if (logEnable) {
+            Log.i(TAG, msg);
+        }
     }
 
     /**
@@ -154,16 +190,25 @@ public final class CameraHelper {
         }
     }
 
+    /**
+     * 手动聚焦
+     */
     public void focus() {
         stopAutoFocus();
         mAutoFocusRunnable.run();
         startAutoFocus();
     }
 
+    /**
+     * @return 当前是否正在录制
+     */
     public boolean isRecording() {
         return isRecording;
     }
 
+    /**
+     * @return 开启屏幕录制
+     */
     public boolean startRecorder() {
         if (mCamera == null) {
             return false;
@@ -228,6 +273,9 @@ public final class CameraHelper {
         return true;
     }
 
+    /**
+     * 停止录制
+     */
     public void stopRecorder() {
         releaseRecorder();
         if (mCameraOptCallback != null) {
@@ -235,6 +283,9 @@ public final class CameraHelper {
         }
     }
 
+    /**
+     * 释放录制器
+     */
     private void releaseRecorder() {
         if (mMediaRecorder == null) {
             return;
@@ -258,6 +309,12 @@ public final class CameraHelper {
         }
     }
 
+    /**
+     * 开启相机
+     *
+     * @param faceType 前置/后置
+     * @return 是否开启成功
+     */
     private boolean openCamera(int faceType) {
         boolean isSupport = supportCameraFacing(faceType);
         if (isSupport) {
@@ -290,14 +347,12 @@ public final class CameraHelper {
         return false;
     }
 
+    /**
+     * @param camera 配置相机基本参数
+     */
     private void initParameters(Camera camera) {
         try {
             mParameters = camera.getParameters();
-            //设置预览图片的格式
-            //PS：最好不要设置为ImageFormat.NV21，因为小米5s前置截图的byte[] data 通过BitmapFactory.decodeByteArray编码失败！！！
-            //PS：最好不要设置为ImageFormat.NV21，因为小米5s前置截图的byte[] data 通过BitmapFactory.decodeByteArray编码失败！！！
-            //PS：最好不要设置为ImageFormat.NV21，因为小米5s前置截图的byte[] data 通过BitmapFactory.decodeByteArray编码失败！！！
-//            mParameters.setPictureFormat(ImageFormat.RGB_565);
 
             //获取与指定狂傲相等或最接近的尺寸
             //设置预览尺寸
@@ -346,7 +401,7 @@ public final class CameraHelper {
 
         for (Camera.Size size : sizeList) {
             float supportRatio = size.width * 1.0f / size.height;
-            Log.i(TAG, "系统支持的尺寸  = " + supportRatio);
+            log("系统支持的尺寸  = " + supportRatio);
         }
 
         for (Camera.Size size : sizeList) {
@@ -363,16 +418,20 @@ public final class CameraHelper {
         }
 
         if (bestSize != null) {
-            Log.i(TAG, "目标尺寸   targetWidth = " + targetWidth
+            log("目标尺寸   targetWidth = " + targetWidth
                     + "  targetHeight = " + targetHeight
                     + " ---> targetRatio = " + targetRatio);
-            Log.i(TAG, "最优尺寸   bestSize.width =  " + bestSize.width
+            log("最优尺寸   bestSize.width =  " + bestSize.width
                     + " bestSize.height = " + bestSize.height
                     + " ---> supportRatio = " + bestSize.width * 1.0f / bestSize.height);
         }
         return bestSize;
     }
 
+    /**
+     * @param focusMode 聚焦模式
+     * @return 是否支持
+     */
     private boolean isSupportFocus(String focusMode) {
         List<String> supportedFocusModes = mParameters.getSupportedFocusModes();
         for (String supportedFocusMode : supportedFocusModes) {
@@ -417,10 +476,13 @@ public final class CameraHelper {
         if (mCamera != null) {
             mCamera.setDisplayOrientation(displayOrientation);
         }
-        Log.i(TAG, "屏幕的旋转角度 = " + rotation);
-        Log.i(TAG, "setDisplayOrientation ---> " + displayOrientation);
+        log("屏幕的旋转角度 = " + rotation);
+        log("setDisplayOrientation ---> " + displayOrientation);
     }
 
+    /**
+     * 开启界面预览
+     */
     private void startPreview() {
         if (mCamera != null) {
             try {
@@ -435,6 +497,9 @@ public final class CameraHelper {
         }
     }
 
+    /**
+     * 开始自动聚焦
+     */
     private void startAutoFocus() {
         if (isAutoFocus) {
             mSurfaceView.removeCallbacks(mAutoFocusRunnable);
@@ -442,6 +507,9 @@ public final class CameraHelper {
         }
     }
 
+    /**
+     * 停止自动聚焦
+     */
     private void stopAutoFocus() {
         if (mCamera != null) {
             mCamera.cancelAutoFocus();
@@ -449,6 +517,9 @@ public final class CameraHelper {
         mSurfaceView.removeCallbacks(mAutoFocusRunnable);
     }
 
+    /**
+     * 释放相机资源
+     */
     private void releaseCamera() {
         if (mCamera != null) {
             mCamera.stopPreview();
@@ -458,33 +529,6 @@ public final class CameraHelper {
         }
     }
 
-    /**
-     * displayWidth
-     * //////////////////////
-     * /                    /
-     * /                    /
-     * /                    /
-     * /                    /
-     * /                    /
-     * /       portrait     /  displayHeight
-     * /                    /
-     * /                    /
-     * /                    /
-     * /                    /
-     * /                    /
-     * //////////////////////
-     * <p>
-     * <p>
-     * <p>
-     * displayWidth
-     * ////////////////////////////////
-     * /                              /
-     * /                              /
-     * /          landscape           /  displayHeight
-     * /                              /
-     * /                              /
-     * ////////////////////////////////
-     */
     public final static class Builder {
         private WeakReference<Activity> activity;
         private Camera.PreviewCallback previewCallback;
@@ -494,6 +538,7 @@ public final class CameraHelper {
         private Bitmap.CompressFormat compressFormat = Bitmap.CompressFormat.PNG;
         private CameraOptCallback cameraOptCallback;
         private boolean isAutoFocus = true;
+        private boolean logEnable = true;
 
         public final Builder setActivity(Activity activity) {
             this.activity = new WeakReference<>(activity);
@@ -535,6 +580,11 @@ public final class CameraHelper {
             return this;
         }
 
+        public final Builder setLogEnable(boolean logEnable) {
+            this.logEnable = logEnable;
+            return this;
+        }
+
         public CameraHelper build() {
             if (activity == null) {
                 throw new IllegalArgumentException("activity can not be empty");
@@ -554,6 +604,7 @@ public final class CameraHelper {
             cameraHelper.mCompressFormat = compressFormat;
             cameraHelper.mCameraOptCallback = cameraOptCallback;
             cameraHelper.isAutoFocus = isAutoFocus;
+            cameraHelper.logEnable = logEnable;
             return cameraHelper;
         }
     }
