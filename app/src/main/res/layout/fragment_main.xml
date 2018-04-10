@@ -32,6 +32,12 @@
         android:layout_height="wrap_content"
         android:text="点我跳转BoomActivity" />
 
+    <Button
+        android:id="@+id/other_btn"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="跳转其他Activity的入口" />
+
     <ImageView
         android:id="@+id/avatar"
         android:layout_width="match_parent"

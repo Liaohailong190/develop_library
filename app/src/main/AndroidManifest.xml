@@ -28,6 +28,8 @@
         <activity android:name=".activity.BoomActivity" />
         <activity android:name=".activity.ImageActivity" />
         <activity android:name=".activity.CameraActivity" />
+        <activity android:name=".activity.OtherActivity" />
+        <activity android:name=".activity.GLActivity" />
     </application>
 
 </manifest>

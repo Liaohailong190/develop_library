@@ -1,5 +1,6 @@
 package org.liaohailong.pdftestapp.fragment;
 
+import android.annotation.SuppressLint;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.view.LayoutInflater;
@@ -27,11 +28,14 @@ import org.liaohailong.pdftestapp.R;
 import org.liaohailong.pdftestapp.activity.BoomActivity;
 import org.liaohailong.pdftestapp.activity.ImageActivity;
 import org.liaohailong.pdftestapp.activity.KotlinActivity;
+import org.liaohailong.pdftestapp.activity.OtherActivity;
 import org.liaohailong.pdftestapp.model.Student;
 
 import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.List;
 
 
@@ -54,7 +58,6 @@ public class MainFragment extends BaseFragment {
     //    private String imageUrl03 = "https://timgsa.baidu.com/timg?image&quality=80&size=b9999_10000&sec=1505106699538&di=6e7649394fca8898968dd0a1388c9b76&imgtype=0&src=http%3A%2F%2Fimg.mp.itc.cn%2Fupload%2F20160829%2F24997e71d5814cf48f307d7caece946c.gif";
     private String[] urls = new String[2];
     private int imageUrlIndex = 0;
-    private int httpRequestIndex = 0;
     private Mouse<String, String> mouse = new Mouse<String, String>() {
         @Override
         public String run(String params) {
@@ -87,15 +90,20 @@ public class MainFragment extends BaseFragment {
                     }
                 })
                 .execute("https://www.baidu.com/");
-        httpRequestIndex = 0;
+
         for (int i = 0; i < 100; i++) {
             Http.create().url("https://www.baidu.com/")
 //                    .worker(new HttpUrlConnectionWorker())
                     .execute(new HttpCallback<String>() {
+                        @SuppressLint("SimpleDateFormat")
+                        private SimpleDateFormat mSimpleDateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+                        private Date mDate = new Date();
+
                         @Override
                         public void onSuccess(String result) {
-                            httpRequestIndex++;
-                            ToastUtil.show("Http请求成功 i = " + httpRequestIndex + "  result = " + result);
+                            mDate.setTime(System.currentTimeMillis());
+                            String format = mSimpleDateFormat.format(mDate);
+                            ToastUtil.show("Http请求成功 time  = " + format + "  result = " + result);
                         }
 
                         @Override
@@ -118,7 +126,7 @@ public class MainFragment extends BaseFragment {
 //        urls[2] = imageUrl03;
     }
 
-    @OnClick({R.id.text_fragment, R.id.kotlin_btn, R.id.bomb_btn, R.id.jni_btn})
+    @OnClick({R.id.text_fragment, R.id.kotlin_btn, R.id.bomb_btn, R.id.jni_btn, R.id.other_btn})
     public void recordCount(View v) {
         switch (v.getId()) {
             case R.id.text_fragment:
@@ -133,6 +141,9 @@ public class MainFragment extends BaseFragment {
                 break;
             case R.id.jni_btn:
                 ImageActivity.show(getContext());
+                break;
+            case R.id.other_btn:
+                OtherActivity.show(getContext());
                 break;
         }
     }
