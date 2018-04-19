@@ -9,15 +9,6 @@ import android.os.Message;
 import android.support.annotation.NonNull;
 import android.text.TextUtils;
 
-import com.squareup.okhttp.Call;
-import com.squareup.okhttp.Callback;
-import com.squareup.okhttp.MultipartBuilder;
-import com.squareup.okhttp.OkHttpClient;
-import com.squareup.okhttp.Request;
-import com.squareup.okhttp.RequestBody;
-import com.squareup.okhttp.Response;
-import com.squareup.okhttp.ResponseBody;
-
 import org.liaohailong.library.RootApplication;
 import org.liaohailong.library.http.ProgressRequestBody;
 import org.liaohailong.library.util.FileUtil;
@@ -36,6 +27,16 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
+
+import okhttp3.Call;
+import okhttp3.Callback;
+import okhttp3.MediaType;
+import okhttp3.MultipartBody;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.RequestBody;
+import okhttp3.Response;
+import okhttp3.ResponseBody;
 
 /**
  * 文件上传/下载
@@ -90,18 +91,13 @@ public class FileLoader {
 
     private FileLoader() {
         mExecutor = Executors.newFixedThreadPool(THREAD_POOL_SIZE);
-        mClient = new OkHttpClient();
-        initClient();
+        mClient = new OkHttpClient.Builder()
+                .connectTimeout(15, TimeUnit.MINUTES)
+                .readTimeout(15, TimeUnit.MINUTES)
+                .writeTimeout(15, TimeUnit.MINUTES)
+                .build();
         mDirectory = FileUtil.getRootDirectory(NAME);
     }
-
-    //设置超时，不设置可能会报异常
-    private void initClient() {
-        mClient.setConnectTimeout(15, TimeUnit.MINUTES);
-        mClient.setReadTimeout(15, TimeUnit.MINUTES);
-        mClient.setWriteTimeout(15, TimeUnit.MINUTES);
-    }
-
 
     private static class SingletonHolder {
         static final FileLoader INSTANCE = new FileLoader();
@@ -299,16 +295,20 @@ public class FileLoader {
             Call call = mClient.newCall(build);
             call.enqueue(new Callback() {
                 @Override
-                public void onFailure(Request request, IOException e) {
+                public void onFailure(@NonNull Call call, @NonNull IOException e) {
                     onFileLoadFailure(url, e.toString());
                 }
 
                 @Override
-                public void onResponse(Response response) throws IOException {
+                public void onResponse(@NonNull Call call, @NonNull Response response) throws IOException {
                     if (!response.isSuccessful()) {
                         return;
                     }
                     ResponseBody body = response.body();
+                    if (body == null) {
+                        onFileLoadFailure(url, "getContentLength ResponseBody = null");
+                        return;
+                    }
                     long contentLength = body.contentLength();
                     //检查用户是否已经删除了临时下载文件
                     String tempPath = getTempPath(url);
@@ -334,12 +334,12 @@ public class FileLoader {
             Call call = mClient.newCall(build);
             call.enqueue(new Callback() {
                 @Override
-                public void onFailure(Request request, IOException e) {
+                public void onFailure(@NonNull Call call, @NonNull IOException e) {
                     onFileLoadFailure(url, e.toString());
                 }
 
                 @Override
-                public void onResponse(Response response) throws IOException {
+                public void onResponse(@NonNull Call call, @NonNull Response response) throws IOException {
                     if (!response.isSuccessful()) {
                         return;
                     }
@@ -355,6 +355,10 @@ public class FileLoader {
                     InputStream inputStream = null;
                     RandomAccessFile randomAccessFile = null;
                     try (ResponseBody body = response.body()) {
+                        if (body == null) {
+                            onFileLoadFailure(url, "downLoad ResponseBody = null");
+                            return;
+                        }
                         inputStream = body.byteStream();
                         String tempPath = getTempPath(url);
                         File file = new File(tempPath);
@@ -418,15 +422,16 @@ public class FileLoader {
             if (TextUtils.isEmpty(uploadUrl) || params == null || params.isEmpty()) {
                 return;
             }
-            MultipartBuilder builder = new MultipartBuilder();
-            builder.type(MultipartBuilder.FORM);
+
+            MultipartBody.Builder builder = new MultipartBody.Builder();
+            builder.setType(MultipartBody.FORM);
             //追加参数
             for (Map.Entry<String, Object> entry : params.entrySet()) {
                 String key = entry.getKey();
                 Object value = entry.getValue();
                 if (value instanceof File) {
                     File file = (File) value;
-                    builder.addFormDataPart(key, file.getName(), RequestBody.create(null, file));
+                    builder.addFormDataPart(key, file.getName(), RequestBody.create(MultipartBody.FORM, file));
                 } else {
                     builder.addFormDataPart(key, value.toString());
                 }
@@ -455,19 +460,24 @@ public class FileLoader {
                     .build();
             Call call = mClient.newCall(request);
             call.enqueue(new Callback() {
-                Status status = null;
+                Status status;
 
                 @Override
-                public void onFailure(Request request, IOException e) {
+                public void onFailure(@NonNull Call call, @NonNull IOException e) {
                     onFileLoadFailure(uploadUrl, e.toString());
                 }
 
                 @Override
-                public void onResponse(Response response) throws IOException {
+                public void onResponse(@NonNull Call call, @NonNull Response response) throws IOException {
+                    ResponseBody body = response.body();
+                    if (body == null) {
+                        onFileLoadFailure(uploadUrl, "up load ResponseBody = null");
+                        return;
+                    }
                     if (status == null) {
                         status = new Status();
                     }
-                    String result = response.body().string();
+                    String result = body.string();
                     //上传完毕
                     status.url = uploadUrl;
                     status.progress = 100;

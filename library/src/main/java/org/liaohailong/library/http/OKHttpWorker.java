@@ -1,23 +1,23 @@
 package org.liaohailong.library.http;
 
+import android.support.annotation.NonNull;
 import android.text.TextUtils;
-
-import com.squareup.okhttp.Call;
-import com.squareup.okhttp.Callback;
-import com.squareup.okhttp.FormEncodingBuilder;
-import com.squareup.okhttp.Headers;
-import com.squareup.okhttp.OkHttpClient;
-import com.squareup.okhttp.Request;
-import com.squareup.okhttp.RequestBody;
-import com.squareup.okhttp.Response;
 
 import org.liaohailong.library.util.Utility;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Map;
-import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
+
+import okhttp3.Call;
+import okhttp3.Callback;
+import okhttp3.FormBody;
+import okhttp3.Headers;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.Response;
+import okhttp3.ResponseBody;
 
 /**
  * 使用OKHttp做为请求网络任务体
@@ -31,8 +31,12 @@ public class OKHttpWorker extends HttpWorker {
     private OkHttpClient client;
 
     public OKHttpWorker() {
-        client = new OkHttpClient();
-        setParams(client);
+        int timeout = getTimeout();
+        client = new OkHttpClient.Builder()
+                .connectTimeout(timeout, TimeUnit.MILLISECONDS)
+                .writeTimeout(timeout, TimeUnit.MILLISECONDS)
+                .readTimeout(timeout, TimeUnit.MILLISECONDS)
+                .build();
     }
 
     @Override
@@ -47,14 +51,14 @@ public class OKHttpWorker extends HttpWorker {
                 //添加post请求参数
                 Map<String, String> paramMap = getParamMap();
                 if (!paramMap.isEmpty()) {
-                    FormEncodingBuilder formEncodingBuilder = new FormEncodingBuilder();
+                    FormBody.Builder formBuilder = new FormBody.Builder();
                     for (Map.Entry<String, String> entry : paramMap.entrySet()) {
                         String key = entry.getKey();
                         String value = entry.getValue();
-                        formEncodingBuilder.add(key, value);
+                        formBuilder.add(key, value);
                     }
-                    RequestBody requestBody = formEncodingBuilder.build();
-                    builder.post(requestBody);
+                    FormBody build = formBuilder.build();
+                    builder.post(build);
                 } else {
                     builder.get();
                 }
@@ -62,13 +66,18 @@ public class OKHttpWorker extends HttpWorker {
                 Call call = client.newCall(request);
                 call.enqueue(new Callback() {
                     @Override
-                    public void onFailure(Request request, IOException e) {
+                    public void onFailure(@NonNull Call call, @NonNull IOException e) {
                         OKHttpWorker.this.onFailure(url, e.toString());
                     }
 
                     @Override
-                    public void onResponse(Response response) throws IOException {
-                        InputStream is = response.body().byteStream();
+                    public void onResponse(@NonNull Call call, @NonNull Response response) throws IOException {
+                        ResponseBody body = response.body();
+                        if (body == null) {
+                            OKHttpWorker.this.onFailure(url, "ResponseBody = null");
+                            return;
+                        }
+                        InputStream is = body.byteStream();
                         // 注意这里 ↓
                         Headers headers = response.headers();
                         for (String name : headers.names()) {
@@ -93,12 +102,5 @@ public class OKHttpWorker extends HttpWorker {
         builder.addHeader("Connection", "close");
         builder.addHeader("Charset", "UTF-8");
         builder.addHeader("Accept-Encoding", "gzip,deflate");
-    }
-
-    private static void setParams(OkHttpClient client) {
-        int timeout = getTimeout();
-        client.setWriteTimeout(timeout, TimeUnit.MILLISECONDS);
-        client.setReadTimeout(timeout, TimeUnit.MILLISECONDS);
-        client.setConnectTimeout(timeout, TimeUnit.MILLISECONDS);
     }
 }
