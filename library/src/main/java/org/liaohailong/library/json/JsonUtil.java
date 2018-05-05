@@ -598,7 +598,6 @@ public class JsonUtil {
      * @return
      */
     public static String getJsonFromAsset(Context mContext, String fileName) {
-        // TODO Auto-generated method stub
         StringBuilder sb = new StringBuilder();
         AssetManager am = mContext.getAssets();
         try {
@@ -609,7 +608,6 @@ public class JsonUtil {
                 sb.append(next);
             }
         } catch (IOException e) {
-            // TODO Auto-generated catch block
             e.printStackTrace();
             sb.delete(0, sb.length());
         }

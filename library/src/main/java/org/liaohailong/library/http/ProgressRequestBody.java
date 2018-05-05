@@ -1,6 +1,8 @@
 package org.liaohailong.library.http;
 
 
+import android.support.annotation.NonNull;
+
 import java.io.IOException;
 
 import okhttp3.MediaType;
@@ -52,7 +54,7 @@ public class ProgressRequestBody extends RequestBody {
      * @throws IOException 异常
      */
     @Override
-    public void writeTo(BufferedSink sink) throws IOException {
+    public void writeTo(@NonNull BufferedSink sink) throws IOException {
         if (bufferedSink == null) {
             //包装
             bufferedSink = Okio.buffer(sink(sink));
@@ -78,7 +80,7 @@ public class ProgressRequestBody extends RequestBody {
             long contentLength = 0L;
 
             @Override
-            public void write(Buffer source, long byteCount) throws IOException {
+            public void write(@NonNull Buffer source, long byteCount) throws IOException {
                 super.write(source, byteCount);
                 if (contentLength == 0) {
                     //获得contentLength的值，后续不再调用
@@ -88,7 +90,9 @@ public class ProgressRequestBody extends RequestBody {
                 bytesWritten += byteCount;
                 //回调
                 if (callback != null) {
-                    int progress = (int) ((bytesWritten / contentLength) * 100);
+                    float current = bytesWritten * 1f;
+                    float total = contentLength * 1f;
+                    int progress = (int) Math.ceil((current / total) * 100f);
                     callback.onProgress(progress);
                 }
             }
