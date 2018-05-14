@@ -108,8 +108,8 @@ public class WaterWaveView extends View {
 
     private float progress = 0.55f;
     private float amplitude = 1.0f;//振幅，波浪最高浪与最低浪的中间差
-    private float waveLength = 1.0f;////波浪单个的长度，影响画面中有几个浪头
-    private float waveShift = 0.05f;//波浪的水平移动速度
+    private float waveLength = 1.5f;////波浪单个的长度，影响画面中有几个浪头
+    private float waveShift = 0.0f;//波浪的水平移动速度
 
     /**
      * @param progress [0.0f,1.0f]
@@ -117,7 +117,7 @@ public class WaterWaveView extends View {
     public void setProgress(float progress) {
         progress = progress < 0.0f ? 0.0f : progress;
         progress = progress > 1.0f ? 1.0f : progress;
-        this.progress = 1.0f - progress;
+        this.progress = progress;
     }
 
     public float getProgress() {
@@ -192,9 +192,9 @@ public class WaterWaveView extends View {
             if (mPaint.getShader() == null) {
                 mPaint.setShader(mWaveShader);
             }
-
+            //移动渲染器举证，实现波浪动画
             waveShift = waveShift >= Float.MAX_VALUE ? 0.0f : waveShift;
-            waveShift += 0.05f;
+            waveShift += 0.075f;
             mShaderMatrix.reset();
             mShaderMatrix.preScale(
                     waveLength,
@@ -203,7 +203,7 @@ public class WaterWaveView extends View {
                     mHeight);
             mShaderMatrix.postTranslate(
                     waveShift * mWidth,
-                    progress * mHeight);
+                    (DEFAULT_WATER_LEVEL_RATIO - progress) * mHeight);
             mWaveShader.setLocalMatrix(mShaderMatrix);
 
             switch (mShape) {

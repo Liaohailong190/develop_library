@@ -30,6 +30,9 @@
         <activity android:name=".activity.CameraActivity" />
         <activity android:name=".activity.OtherActivity" />
         <activity android:name=".activity.GLActivity" />
+        <activity
+            android:name=".activity.CustomViewActivity"
+            android:screenOrientation="sensorLandscape" />
     </application>
 
 </manifest>

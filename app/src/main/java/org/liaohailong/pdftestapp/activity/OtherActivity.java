@@ -27,11 +27,14 @@ public class OtherActivity extends BaseActivity {
         setContentView(R.layout.activity_other);
     }
 
-    @OnClick({R.id.gl_btn})
+    @OnClick({R.id.gl_btn, R.id.custom_view_btn})
     public void jump(View v) {
         switch (v.getId()) {
             case R.id.gl_btn:
                 GLActivity.show(v.getContext());
+                break;
+            case R.id.custom_view_btn:
+                CustomViewActivity.show(v.getContext());
                 break;
         }
     }

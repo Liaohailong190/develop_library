@@ -9,24 +9,15 @@ import android.view.animation.AccelerateDecelerateInterpolator;
  */
 
 public class WaveHelper {
-
+    private final WaterWaveView mWaterWaveView;
     private final ObjectAnimator mProgressAnim;
-    private final ObjectAnimator mAmplitudeAnim;
-    private final ObjectAnimator mWaveLengthAnim;
 
     public WaveHelper(WaterWaveView waterWaveView) {
-        mProgressAnim = ObjectAnimator.ofFloat(waterWaveView, "progress");
-        mAmplitudeAnim = ObjectAnimator.ofFloat(waterWaveView, "amplitude");
-        mWaveLengthAnim = ObjectAnimator.ofFloat(waterWaveView, "waveLength");
+        mWaterWaveView = waterWaveView;
 
-        initAnim(mProgressAnim);
-        initAnim(mAmplitudeAnim);
-        initAnim(mWaveLengthAnim);
-    }
-
-    private void initAnim(ObjectAnimator objectAnimator) {
-        objectAnimator.setDuration(1000);
-        objectAnimator.setInterpolator(new AccelerateDecelerateInterpolator());
+        mProgressAnim = ObjectAnimator.ofFloat(waterWaveView, "progress", 0f, 1.0f);
+        mProgressAnim.setDuration(1000);
+        mProgressAnim.setInterpolator(new AccelerateDecelerateInterpolator());
     }
 
     /**
@@ -36,7 +27,8 @@ public class WaveHelper {
         if (mProgressAnim.isRunning()) {
             mProgressAnim.pause();
         }
-        mProgressAnim.setFloatValues(progress);
+        float oldProgress = mWaterWaveView.getProgress();
+        mProgressAnim.setFloatValues(oldProgress, progress);
         mProgressAnim.start();
     }
 }
