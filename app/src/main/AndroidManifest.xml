@@ -16,11 +16,11 @@
         android:theme="@style/Theme.AppCompat.NoActionBar">
 
         <activity android:name=".activity.MainActivity">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
+            <!--<intent-filter>-->
+            <!--<action android:name="android.intent.action.MAIN" />-->
 
-                <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
+            <!--<category android:name="android.intent.category.LAUNCHER" />-->
+            <!--</intent-filter>-->
         </activity>
 
         <activity android:name=".activity.PdfActivity" />
@@ -32,7 +32,13 @@
         <activity android:name=".activity.GLActivity" />
         <activity
             android:name=".activity.CustomViewActivity"
-            android:screenOrientation="sensorLandscape" />
+            android:screenOrientation="sensorLandscape">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
     </application>
 
 </manifest>

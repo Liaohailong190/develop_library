@@ -5,8 +5,8 @@
 
     <org.liaohailong.pdftestapp.widget.wave.WaterWaveView
         android:id="@+id/wave_view"
-        android:layout_width="300dp"
-        android:layout_height="300dp"
+        android:layout_width="422dp"
+        android:layout_height="252dp"
         android:layout_gravity="center" />
 
 </FrameLayout>

@@ -10,7 +10,7 @@ import android.support.annotation.Nullable;
 import org.liaohailong.pdftestapp.BaseActivity;
 import org.liaohailong.pdftestapp.R;
 import org.liaohailong.pdftestapp.widget.wave.WaterWaveView;
-import org.liaohailong.pdftestapp.widget.wave.WaveHelper;
+import org.liaohailong.pdftestapp.widget.wave.WaterWaveHelper;
 
 /**
  * Describe as: 展示自定义视图的界面
@@ -24,8 +24,7 @@ public class CustomViewActivity extends BaseActivity {
         context.startActivity(intent);
     }
 
-    private WaveHelper mWaveHelper;
-
+    private WaterWaveHelper mWaveHelper;
     private int index = 0;
     private float[] progresses = new float[]{0.15f, 0.25f, 0.5f, 0.75f, 0.85f};
 
@@ -45,7 +44,9 @@ public class CustomViewActivity extends BaseActivity {
         public void run() {
             WaterWaveView waterWaveView = findViewById(R.id.wave_view);
             try {
-                mWaveHelper = new WaveHelper(waterWaveView);
+                waterWaveView.setDrawable(getResources().getDrawable(R.drawable.wave_img));
+                waterWaveView.setShape(WaterWaveView.Shape.DRAWABLE);
+                mWaveHelper = new WaterWaveHelper(waterWaveView);
                 handler.postDelayed(progressRunnable, 3000);
             } catch (Exception ex) {
                 ex.printStackTrace();

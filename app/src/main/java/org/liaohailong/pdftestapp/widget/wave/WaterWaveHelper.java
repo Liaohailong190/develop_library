@@ -8,13 +8,12 @@ import android.view.animation.AccelerateDecelerateInterpolator;
  * Created by LHL on 2018/5/14.
  */
 
-public class WaveHelper {
+public class WaterWaveHelper {
     private final WaterWaveView mWaterWaveView;
     private final ObjectAnimator mProgressAnim;
 
-    public WaveHelper(WaterWaveView waterWaveView) {
+    public WaterWaveHelper(WaterWaveView waterWaveView) {
         mWaterWaveView = waterWaveView;
-
         mProgressAnim = ObjectAnimator.ofFloat(waterWaveView, "progress", 0f, 1.0f);
         mProgressAnim.setDuration(1000);
         mProgressAnim.setInterpolator(new AccelerateDecelerateInterpolator());

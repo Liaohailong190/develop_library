@@ -7,7 +7,12 @@ import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Matrix;
 import android.graphics.Paint;
+import android.graphics.PixelFormat;
+import android.graphics.PorterDuff;
+import android.graphics.PorterDuffXfermode;
 import android.graphics.Shader;
+import android.graphics.Xfermode;
+import android.graphics.drawable.Drawable;
 import android.support.annotation.ColorInt;
 import android.support.annotation.Nullable;
 import android.util.AttributeSet;
@@ -44,7 +49,9 @@ public class WaterWaveView extends View {
     private int mFrontColor;
     private BitmapShader mWaveShader;
     private Matrix mShaderMatrix;//渲染器动画矩阵
-    private Shape mShape = Shape.round;
+    private Shape mShape = Shape.ROUND;
+    private Xfermode mXfermode = new PorterDuffXfermode(PorterDuff.Mode.SRC_IN);
+    private Drawable mDrawable;
 
     public WaterWaveView(Context context) {
         this(context, null);
@@ -84,6 +91,22 @@ public class WaterWaveView extends View {
 
     public void setWaveBackgroundColor(@ColorInt int backgroundColor) {
         mBackgroundPaint.setColor(backgroundColor);
+    }
+
+    public void setDrawable(Drawable mDrawable) {
+        this.mDrawable = mDrawable;
+    }
+
+    private void drawableToBitmap(Drawable drawable, Canvas canvas) {
+        int w = getWidth();
+        int h = getHeight();
+        Bitmap.Config config =
+                drawable.getOpacity() != PixelFormat.OPAQUE ? Bitmap.Config.ARGB_8888
+                        : Bitmap.Config.RGB_565;
+        Bitmap bitmap = Bitmap.createBitmap(w, h, config);
+        canvas.drawBitmap(bitmap, 0, 0, mPaint);
+        drawable.setBounds(0, 0, w, h);
+        drawable.draw(canvas);
     }
 
 
@@ -207,17 +230,30 @@ public class WaterWaveView extends View {
             mWaveShader.setLocalMatrix(mShaderMatrix);
 
             switch (mShape) {
-                case square:
+                case SQUARE:
                     //绘制背景
                     canvas.drawRect(0, 0, mWidth, mHeight, mBackgroundPaint);
                     //绘制波浪
                     canvas.drawRect(0, 0, mWidth, mHeight, mPaint);
                     break;
-                case round:
+                case ROUND:
                     //绘制背景
                     canvas.drawCircle(mWidth / 2f, mHeight / 2f, mRadius, mBackgroundPaint);
                     //绘制波浪
                     canvas.drawCircle(mWidth / 2f, mHeight / 2f, mRadius, mPaint);
+                    break;
+                case DRAWABLE:
+                    if (mDrawable != null) {
+                        drawableToBitmap(mDrawable, canvas);
+                        int saveFlags = Canvas.MATRIX_SAVE_FLAG | Canvas.CLIP_SAVE_FLAG | Canvas.HAS_ALPHA_LAYER_SAVE_FLAG | Canvas.FULL_COLOR_LAYER_SAVE_FLAG | Canvas.CLIP_TO_LAYER_SAVE_FLAG;
+                        canvas.saveLayer(0, 0, getWidth(), getHeight(), null, saveFlags);
+                        drawableToBitmap(mDrawable, canvas);
+                        mPaint.setXfermode(mXfermode);
+                        canvas.drawRect(0, 0,
+                                mWidth, mHeight, mPaint);
+                        mPaint.setXfermode(null);
+                        canvas.restore();
+                    }
                     break;
             }
         } else {
@@ -227,6 +263,6 @@ public class WaterWaveView extends View {
     }
 
     public enum Shape {
-        square, round
+        SQUARE, ROUND, DRAWABLE
     }
 }
