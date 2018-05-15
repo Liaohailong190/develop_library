@@ -5,16 +5,14 @@ import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Path;
-import android.graphics.PorterDuff;
-import android.graphics.PorterDuffXfermode;
-import android.graphics.Rect;
 import android.graphics.RectF;
 import android.graphics.Typeface;
-import android.graphics.Xfermode;
 import android.support.annotation.ColorInt;
 import android.support.annotation.Nullable;
 import android.text.TextPaint;
+import android.text.TextUtils;
 import android.util.AttributeSet;
+import android.util.SparseArray;
 import android.view.View;
 
 import java.util.LinkedList;
@@ -57,6 +55,8 @@ public class PercentWavePie extends View {
     private LinkedList<WaveModel> mWaveModelList = new LinkedList<>();
     //最大进度数
     private String mMaxValueStr;
+    //缓存进度数
+    private SparseArray<String> mValueCache = new SparseArray<>();
     //最大水位线的波浪模型
     private WaveModel mMaxWaveModel;
     @ColorInt
@@ -110,6 +110,9 @@ public class PercentWavePie extends View {
         this.mTextColorOutWave = textColorOutWave;
     }
 
+    /**
+     * @param textFontSize px单位!px单位!px单位!
+     */
     public void setTextFontSize(float textFontSize) {
         mValuePaint.setTextSize(textFontSize);
     }
@@ -130,7 +133,25 @@ public class PercentWavePie extends View {
         if (!mWaveModelList.isEmpty()) {
             this.mWaveModelList.addAll(mWaveModelList);
         }
-        refreshWave();
+        initWave();
+    }
+
+    public LinkedList<WaveModel> getWaveModelList() {
+        return mWaveModelList;
+    }
+
+    private void initWave() {
+        if (mWidth > 0 && mHeight > 0) {
+            //初始化水波数据
+            for (int i = 0; i < mWaveModelList.size(); i++) {
+                WaveModel waveModel = mWaveModelList.get(i);
+                waveModel.setIndex(i + 1);
+                int leftAndTop = (int) (mBorderWidth + mSpace);
+                int rightAndBottom = (int) (mRadius * 2f - leftAndTop);
+                waveModel.setRect(0, 0, rightAndBottom, rightAndBottom);
+                waveModel.initConfig();
+            }
+        }
     }
 
     private void refreshWave() {
@@ -139,18 +160,19 @@ public class PercentWavePie extends View {
             int maxValue = 0;
             for (int i = 0; i < mWaveModelList.size(); i++) {
                 WaveModel waveModel = mWaveModelList.get(i);
-                waveModel.setIndex(i + 1);
-                int leftAndTop = (int) (mBorderWidth + mSpace);
-                int rightAndBottom = (int) (mRadius * 2f - leftAndTop);
-                waveModel.setRect(0, 0, rightAndBottom, rightAndBottom);
-                waveModel.initConfig();
                 int tempValue = Math.round(waveModel.getProgress() * 100);
                 if (tempValue > maxValue) {
                     maxValue = tempValue;
                     mMaxWaveModel = waveModel;
                 }
             }
-            mMaxValueStr = String.valueOf(maxValue) + PERCENT;
+            String valueStr = mValueCache.get(maxValue);
+            if (TextUtils.isEmpty(valueStr)) {
+                mMaxValueStr = String.valueOf(maxValue) + PERCENT;
+                mValueCache.put(maxValue, mMaxValueStr);
+            } else {
+                mMaxValueStr = valueStr;
+            }
         }
     }
 
@@ -180,11 +202,13 @@ public class PercentWavePie extends View {
         //默认间距与环线厚度一致
         mSpace = mBorderWidth;
         //重置波纹绘制范围
-        refreshWave();
+        initWave();
     }
 
     @Override
     protected void onDraw(Canvas canvas) {
+        //每次绘制首先刷新数据
+        refreshWave();
         //绘制边界样式
         drawBorder(canvas);
         //绘制纹外文字

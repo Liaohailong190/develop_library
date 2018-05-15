@@ -1,10 +1,12 @@
 package org.liaohailong.pdftestapp.widget.wave;
 
+import android.animation.ValueAnimator;
 import android.graphics.Canvas;
 import android.graphics.Paint;
 import android.graphics.Path;
 import android.graphics.Rect;
 import android.support.annotation.ColorInt;
+import android.view.animation.AccelerateDecelerateInterpolator;
 
 /**
  * Describe as : 波浪模型 {@link PercentWavePie}
@@ -12,6 +14,7 @@ import android.support.annotation.ColorInt;
  */
 
 public class WaveModel {
+    private static final int ANIM_DURATION = 4000;
     //波浪顺序，用来控制波浪的错位感觉
     private int index = 1;
     //波浪颜色
@@ -47,6 +50,9 @@ public class WaveModel {
     private float firstPointY = 0f;//第一个波浪起点Y
     private float amplitude = 0.0f;//振幅
 
+    //动画相关
+    private ValueAnimator progressAnim;
+
     public WaveModel(@ColorInt int color) {
         this.rect = new Rect();
         paint = new Paint();
@@ -54,6 +60,15 @@ public class WaveModel {
         paint.setStyle(Paint.Style.FILL_AND_STROKE);
         paint.setColor(color);
         path = new Path();
+        progressAnim = ValueAnimator.ofFloat(0.0f, 1.0f);
+        progressAnim.setInterpolator(new AccelerateDecelerateInterpolator());
+        progressAnim.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
+            @Override
+            public void onAnimationUpdate(ValueAnimator animation) {
+                float animatedValue = (float) animation.getAnimatedValue();
+                setProgress(animatedValue);
+            }
+        });
 
         //初始化默认值
         setCnt(2);
@@ -87,6 +102,17 @@ public class WaveModel {
 
     float getProgress() {
         return Math.abs(progress - 1.0f);
+    }
+
+    public void animToProgress(float progress) {
+        if (progressAnim.isRunning()) {
+            progressAnim.pause();
+        }
+        float current = getProgress();
+        float offset = Math.abs(progress - current);
+        progressAnim.setFloatValues(current, progress);
+        progressAnim.setDuration((long) (offset * ANIM_DURATION));
+        progressAnim.start();
     }
 
     void setRect(int left, int top, int right, int bottom) {

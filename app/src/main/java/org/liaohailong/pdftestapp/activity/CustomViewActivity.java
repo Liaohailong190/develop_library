@@ -20,15 +20,12 @@ import java.util.LinkedList;
  */
 
 public class CustomViewActivity extends BaseActivity {
-
-    private PercentWavePie mPercentWavePie;
-
     public static void show(Context context) {
         Intent intent = new Intent(context, CustomViewActivity.class);
         context.startActivity(intent);
     }
 
-    private int[] colors = {Color.RED, Color.GREEN, Color.BLUE, Color.YELLOW, Color.CYAN};
+    private PercentWavePie mPercentWavePie;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -36,15 +33,13 @@ public class CustomViewActivity extends BaseActivity {
         setContentView(R.layout.activity_custom_view);
         mPercentWavePie = findViewById(R.id.wave_view);
         int fillColor = Color.parseColor("#294D99");
-        mPercentWavePie.setFillColor(fillColor);
-        mPercentWavePie.setShape(PercentWavePie.Shape.SQUARE);
-
-        mPercentWavePie.setTextColorInWave(Color.WHITE);
-        mPercentWavePie.setTextColorOutWave(fillColor);
-        mPercentWavePie.setTextFontSize(52 * 3.0f);
-        mPercentWavePie.setTextType(true);
-        mPercentWavePie.setTextPosition(0.5f);
-
+        mPercentWavePie.setFillColor(fillColor);//设置填充颜色（边界线的颜色）
+        mPercentWavePie.setShape(PercentWavePie.Shape.SQUARE);//多值波浪图形状
+        mPercentWavePie.setTextColorOutWave(fillColor);//文字单独颜色
+        mPercentWavePie.setTextColorInWave(Color.WHITE);//波纹与文字混色
+        mPercentWavePie.setTextFontSize(52 * 3.0f);//字体大小 PX单位
+        mPercentWavePie.setTextType(true);//是否粗体
+        mPercentWavePie.setTextPosition(0.5f);//文本绘制位置（从底部往上走，值越小，位置越靠底部，反之）
 
         setData(true);
 
@@ -84,31 +79,44 @@ public class CustomViewActivity extends BaseActivity {
     private float currentProgress = 0.1f;
 
     private void setData(boolean plus) {
-        LinkedList<WaveModel> waveModelLinkedList = new LinkedList<>();
+        int fillColor = Color.parseColor("#294D99");
         /*float progress = 0.1f;
-        for (int color : colors) {
-            WaveModel waveModel = new WaveModel(color);
+        for (int i = 0; i < 5; i++) {
+            WaveModel waveModel = new WaveModel(fillColor);
             waveModel.setCnt(2);//波峰个数
             waveModel.setSwing(0.15f);//振幅
             waveModel.setPhase(90f);//初相
             waveModel.setPeriod(2f);//周期
-            waveModel.setOpacity(0.8f);//透明度
+            waveModel.setOpacity(0.55f);//透明度
             waveModel.setProgress(progress);//进度
             waveModelLinkedList.add(waveModel);
-            progress += 0.1f;
+            progress += 0.12f;
         }*/
 
         currentProgress = plus ? currentProgress + 0.1f : currentProgress - 0.1f;
         currentProgress = currentProgress < 0.1f ? 0.1f : currentProgress;
         currentProgress = currentProgress > 1.0f ? 1.0f : currentProgress;
-        WaveModel waveModel = new WaveModel(Color.RED);
-        waveModel.setCnt(2);//波峰个数
-        waveModel.setSwing(0.15f);//振幅
-        waveModel.setPhase(90f);//初相
-        waveModel.setPeriod(2f);//周期
-        waveModel.setOpacity(0.8f);//透明度
-        waveModel.setProgress(currentProgress);//进度
-        waveModelLinkedList.add(waveModel);
-        mPercentWavePie.setWaveModelList(waveModelLinkedList);
+
+        LinkedList<WaveModel> waveModelList = mPercentWavePie.getWaveModelList();
+        if (waveModelList.isEmpty()) {
+            LinkedList<WaveModel> data = new LinkedList<>();
+            WaveModel waveModel = new WaveModel(fillColor);
+            waveModel.setCnt(2);//波峰个数
+            waveModel.setSwing(0.15f);//振幅
+            waveModel.setPhase(90f);//初相
+            waveModel.setPeriod(2f);//周期
+            waveModel.setOpacity(0.8f);//透明度
+            waveModel.setProgress(currentProgress);//进度
+            data.add(waveModel);
+            mPercentWavePie.setWaveModelList(data);
+        } else {
+            WaveModel cache = waveModelList.get(0);
+            cache.setCnt(2);//波峰个数
+            cache.setSwing(0.15f);//振幅
+            cache.setPhase(90f);//初相
+            cache.setPeriod(2f);//周期
+            cache.setOpacity(0.8f);//透明度
+            cache.animToProgress(currentProgress);//进度
+        }
     }
 }
