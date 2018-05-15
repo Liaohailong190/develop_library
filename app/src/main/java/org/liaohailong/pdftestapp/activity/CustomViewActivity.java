@@ -33,7 +33,9 @@ public class CustomViewActivity extends BaseActivity {
         setContentView(R.layout.activity_custom_view);
         mPercentWavePie = findViewById(R.id.wave_view);
         int fillColor = Color.parseColor("#294D99");
-        mPercentWavePie.setFillColor(fillColor);//设置填充颜色（边界线的颜色）
+        mPercentWavePie.setBorderColor(fillColor);//设置填充颜色（边界线的颜色）
+//        mPercentWavePie.setBorderWidth();//设置边界线厚度 = outside_diameter - inside_diameter
+//        mPercentWavePie.setSpace();//设置边框与波浪之前的间隙 0%~50%
         mPercentWavePie.setShape(PercentWavePie.Shape.SQUARE);//多值波浪图形状
         mPercentWavePie.setTextColorOutWave(fillColor);//文字单独颜色
         mPercentWavePie.setTextColorInWave(Color.WHITE);//波纹与文字混色
@@ -76,7 +78,7 @@ public class CustomViewActivity extends BaseActivity {
         });
     }
 
-    private float currentProgress = 0.1f;
+    private float currentProgress = 0.0f;
 
     private void setData(boolean plus) {
         int fillColor = Color.parseColor("#294D99");

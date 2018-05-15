@@ -50,7 +50,7 @@ public class PercentWavePie extends View {
     private float mBorderWidth = 0;//边界环线厚度
     private float mSpace = 0;//边界环线与内部波浪绘制空间的间距
     @ColorInt
-    private int mFillColor = -1;
+    private int mBorderColor = -1;
     //核心集合，绘制波浪
     private LinkedList<WaveModel> mWaveModelList = new LinkedList<>();
     //最大进度数
@@ -88,35 +88,60 @@ public class PercentWavePie extends View {
         mValuePaint.setAntiAlias(true);
     }
 
+    /**
+     * @param mShape 设置波纹图形状 {@link Shape}
+     */
     public void setShape(Shape mShape) {
         this.mShape = mShape;
     }
 
-    public void setFillColor(@ColorInt int color) {
-        mFillColor = color;
+    /**
+     * @param color 设置边框颜色
+     */
+    public void setBorderColor(@ColorInt int color) {
+        mBorderColor = color;
         mBorderPaint.setColor(color);
     }
 
+    /**
+     * @param borderWidth 设置边框厚度
+     */
     public void setBorderWidth(float borderWidth) {
         mBorderWidth = borderWidth;
         mBorderPaint.setStrokeWidth(borderWidth);
     }
 
+    /**
+     * @param mSpace 设置边框与波纹之间的间隙 (大于0，小于半径mRadius)
+     */
+    public void setSpace(float mSpace) {
+        this.mSpace = mSpace;
+    }
+
+    /**
+     * @param textColorInWave 设置波纹与文字合体的颜色
+     */
     public void setTextColorInWave(int textColorInWave) {
         this.mTextColorInWave = textColorInWave;
     }
 
+    /**
+     * @param textColorOutWave 设置未与波纹合体的字体颜色
+     */
     public void setTextColorOutWave(int textColorOutWave) {
         this.mTextColorOutWave = textColorOutWave;
     }
 
     /**
-     * @param textFontSize px单位!px单位!px单位!
+     * @param textFontSize 值的字体大小。      px单位!px单位!px单位!
      */
     public void setTextFontSize(float textFontSize) {
         mValuePaint.setTextSize(textFontSize);
     }
 
+    /**
+     * @param isBold 值的字体是否要为粗体？
+     */
     public void setTextType(boolean isBold) {
         mValuePaint.setTypeface(isBold ? Typeface.DEFAULT_BOLD : Typeface.DEFAULT);
     }
@@ -128,6 +153,9 @@ public class PercentWavePie extends View {
         this.mTextPosition = textPosition;
     }
 
+    /**
+     * @param mWaveModelList 设置波浪模型
+     */
     public void setWaveModelList(LinkedList<WaveModel> mWaveModelList) {
         this.mWaveModelList.clear();
         if (!mWaveModelList.isEmpty()) {
@@ -136,13 +164,16 @@ public class PercentWavePie extends View {
         initWave();
     }
 
+    /**
+     * @return 获取波浪模式集合，推荐调用此方法，复用波浪模型！
+     */
     public LinkedList<WaveModel> getWaveModelList() {
         return mWaveModelList;
     }
 
     private void initWave() {
         if (mWidth > 0 && mHeight > 0) {
-            //初始化水波数据
+            //初始化波浪数据
             for (int i = 0; i < mWaveModelList.size(); i++) {
                 WaveModel waveModel = mWaveModelList.get(i);
                 waveModel.setIndex(i + 1);
@@ -191,16 +222,18 @@ public class PercentWavePie extends View {
             //默认十分之一的边线厚度
             setBorderWidth(mBorderWidth = mRadius * 0.1f);
         }
-        if (mFillColor <= 0) {
+        if (mBorderColor <= 0) {
             //默认蓝
-            setFillColor(Color.parseColor("#294D99"));
+            setBorderColor(Color.parseColor("#294D99"));
         }
         if (mRoundLength <= 0) {
             //默认圆角
             mRoundLength = mRadius * 0.2f;
         }
         //默认间距与环线厚度一致
-        mSpace = mBorderWidth;
+        if (mSpace <= 0) {
+            mSpace = mBorderWidth;
+        }
         //重置波纹绘制范围
         initWave();
     }
