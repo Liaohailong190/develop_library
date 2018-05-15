@@ -1,4 +1,4 @@
-package org.liaohailong.pdftestapp.widget.wave;
+package org.liaohailong.pdftestapp.widget.percentwave;
 
 import android.content.Context;
 import android.graphics.Canvas;

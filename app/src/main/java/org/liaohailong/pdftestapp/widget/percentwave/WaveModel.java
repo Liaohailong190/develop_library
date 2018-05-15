@@ -1,4 +1,4 @@
-package org.liaohailong.pdftestapp.widget.wave;
+package org.liaohailong.pdftestapp.widget.percentwave;
 
 import android.animation.ValueAnimator;
 import android.graphics.Canvas;
@@ -110,9 +110,11 @@ public class WaveModel {
         }
         float current = getProgress();
         float offset = Math.abs(progress - current);
-        progressAnim.setFloatValues(current, progress);
-        progressAnim.setDuration((long) (offset * ANIM_DURATION));
-        progressAnim.start();
+        if (offset > 0) {
+            progressAnim.setFloatValues(current, progress);
+            progressAnim.setDuration((long) (offset * ANIM_DURATION));
+            progressAnim.start();
+        }
     }
 
     void setRect(int left, int top, int right, int bottom) {
@@ -159,7 +161,7 @@ public class WaveModel {
         this.direction = direction;
     }
 
-    void initConfig() {
+    public void initConfig() {
         width = rect.width();
         height = rect.height();
 
