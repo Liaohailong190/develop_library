@@ -102,6 +102,9 @@ public class WaveModel {
         return Math.abs(progress - 1.0f);
     }
 
+    /**
+     * @param progress 目标进度(水位线) 取值范围[0.0f,1.0f]
+     */
     public WaveModel animToProgress(float progress) {
         if (progressAnim.isRunning()) {
             progressAnim.pause();
@@ -120,6 +123,9 @@ public class WaveModel {
         this.rect.set(left, top, right, bottom);
     }
 
+    /**
+     * @param cnt 波峰个数 取值[2,10] 默认2
+     */
     public WaveModel setCnt(int cnt) {
         cnt = cnt < 2 ? 2 : cnt;
         cnt = cnt > 10 ? 10 : cnt;
@@ -127,6 +133,9 @@ public class WaveModel {
         return this;
     }
 
+    /**
+     * @param swing 振幅 取值[0.1f,1.0f] 默认0.15f
+     */
     public WaveModel setSwing(float swing) {
         swing = swing < 0.1f ? 0.1f : swing;
         swing = swing > 1.0f ? 1.0f : swing;
@@ -134,6 +143,9 @@ public class WaveModel {
         return this;
     }
 
+    /**
+     * @param phase 相位 取值[0,360] 默认90
+     */
     public WaveModel setPhase(float phase) {
         phase = phase < 0 ? 0 : phase;
         phase = phase > 360 ? 360 : phase;
@@ -141,6 +153,9 @@ public class WaveModel {
         return this;
     }
 
+    /**
+     * @param period 波浪周期 取值[0.5f,60f] 默认2
+     */
     public WaveModel setPeriod(float period) {
         period = period < 0.5f ? 0.5f : period;
         period = period > 60f ? 60f : period;
@@ -148,6 +163,9 @@ public class WaveModel {
         return this;
     }
 
+    /**
+     * @param opacity 透明度 取值[0.0f,1.0f] 默认0.8f
+     */
     public WaveModel setOpacity(float opacity) {
         opacity = opacity < 0.0f ? 0.0f : opacity;
         opacity = opacity > 1.0f ? 1.0f : opacity;
@@ -157,16 +175,25 @@ public class WaveModel {
         return this;
     }
 
+    /**
+     * @param anim 是否开启动画
+     */
     public WaveModel setAnim(boolean anim) {
         this.anim = anim;
         return this;
     }
 
+    /**
+     * @param direction 动画方向 默认从左到右
+     */
     public WaveModel setDirection(Direction direction) {
         this.direction = direction;
         return this;
     }
 
+    /**
+     * 刷新配置信息，不要忘记在最后调用！
+     */
     public void notifyDataSetChanged() {
         width = rect.width();
         height = rect.height();
@@ -178,7 +205,6 @@ public class WaveModel {
     }
 
     private float offset = 0.0f;
-
 
     void draw(Canvas canvas) {
         path.reset();

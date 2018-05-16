@@ -172,7 +172,7 @@ public class CustomViewActivity extends BaseActivity {
                     .setAnim(anim)//是否开启动画
                     .setDirection(direction)//动画方向
                     .animToProgress(currentProgress)//进度
-                    .notifyDataSetChanged();
+                    .notifyDataSetChanged();//刷新配置信息
         }
     }
 }
