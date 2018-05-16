@@ -72,7 +72,7 @@ public class WaveModel {
         setSwing(0.15f);
         setPhase(90);
         setPeriod(2f);
-        setOpacity(0.25f);
+        setOpacity(0.8f);
         setAnim(true);
         setDirection(Direction.left2Right);
         setProgress(0.05f);
