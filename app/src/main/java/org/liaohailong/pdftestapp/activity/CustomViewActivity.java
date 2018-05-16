@@ -26,6 +26,8 @@ public class CustomViewActivity extends BaseActivity {
         context.startActivity(intent);
     }
 
+    private int[] colors = {Color.GREEN, Color.BLUE, Color.YELLOW, Color.RED};
+
     private PercentWavePie mPercentWavePie;
     private float period = 2f;
     private float swing = 0.15f;
@@ -132,10 +134,10 @@ public class CustomViewActivity extends BaseActivity {
     private float currentProgress = 0.0f;
 
     private void setData() {
-        int fillColor = Color.parseColor("#294D99");
-        /*float progress = 0.1f;
-        for (int i = 0; i < 5; i++) {
-            WaveModel waveModel = new WaveModel(fillColor);
+        float progress = 0.15f;
+        LinkedList<WaveModel> waveModelLinkedList = new LinkedList<>();
+        for (int color : colors) {
+            WaveModel waveModel = new WaveModel(color);
             waveModel.setCnt(2);//波峰个数
             waveModel.setSwing(0.15f);//振幅
             waveModel.setPhase(90f);//初相
@@ -144,8 +146,10 @@ public class CustomViewActivity extends BaseActivity {
             waveModel.setProgress(progress);//进度
             waveModelLinkedList.add(waveModel);
             progress += 0.12f;
-        }*/
+        }
+        mPercentWavePie.setWaveModelList(waveModelLinkedList);
 
+        /*int fillColor = Color.parseColor("#294D99");
         LinkedList<WaveModel> waveModelList = mPercentWavePie.getWaveModelList();
         if (waveModelList.isEmpty()) {
             LinkedList<WaveModel> data = new LinkedList<>();
@@ -158,7 +162,7 @@ public class CustomViewActivity extends BaseActivity {
                     .setProgress(currentProgress);//进度
             data.add(waveModel);
             mPercentWavePie.setWaveModelList(data);
-        }
+        }*/
     }
 
     private void refresh() {

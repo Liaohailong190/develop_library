@@ -15,6 +15,8 @@ import android.util.AttributeSet;
 import android.util.SparseArray;
 import android.view.View;
 
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.LinkedList;
 
 /**
@@ -29,6 +31,14 @@ import java.util.LinkedList;
  */
 
 public class PercentWavePie extends View {
+    private static final Comparator<WaveModel> COMPARATOR = new Comparator<WaveModel>() {
+        @Override
+        public int compare(WaveModel o1, WaveModel o2) {
+            float progress1 = o1.getProgress();
+            float progress2 = o2.getProgress();
+            return progress2 > progress1 ? 1 : -1;
+        }
+    };
     // 默认属性值
     private static final int FPS_60 = 1000 / 60;//绘制间隔  1秒钟60次
     private static final String PERCENT = "%";//百分号
@@ -154,13 +164,15 @@ public class PercentWavePie extends View {
     }
 
     /**
-     * @param mWaveModelList 设置波浪模型
+     * @param waveModels 设置波浪模型
      */
-    public void setWaveModelList(LinkedList<WaveModel> mWaveModelList) {
-        this.mWaveModelList.clear();
-        if (!mWaveModelList.isEmpty()) {
-            this.mWaveModelList.addAll(mWaveModelList);
+    public void setWaveModelList(LinkedList<WaveModel> waveModels) {
+        mWaveModelList.clear();
+        if (!waveModels.isEmpty()) {
+            mWaveModelList.addAll(waveModels);
         }
+        //排序很重要，数值高的要第一个绘制，否则会遮盖小值
+        Collections.sort(mWaveModelList, COMPARATOR);
         initWave();
     }
 
