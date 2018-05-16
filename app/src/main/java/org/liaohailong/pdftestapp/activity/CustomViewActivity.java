@@ -7,6 +7,7 @@ import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.view.View;
 
+import org.liaohailong.library.inject.OnClick;
 import org.liaohailong.pdftestapp.BaseActivity;
 import org.liaohailong.pdftestapp.R;
 import org.liaohailong.pdftestapp.widget.percentwave.PercentWavePie;
@@ -48,112 +49,74 @@ public class CustomViewActivity extends BaseActivity {
         mPercentWavePie.setTextPosition(0.5f);//文本绘制位置（从底部往上走，值越小，位置越靠底部，反之）
 
         setData();
+    }
 
-        findViewById(R.id.plus_progress_btn).setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
+    @OnClick({R.id.plus_progress_btn, R.id.minus_progress_btn,
+            R.id.plus_period_btn, R.id.minus_period_btn,
+            R.id.plus_swing_btn, R.id.minus_swing_btn,
+            R.id.left_to_right_btn, R.id.right_to_left_btn,
+            R.id.plus_cnt_btn, R.id.minus_cnt_btn,
+            R.id.ring_btn, R.id.square_btn, R.id.round_square_btn})
+    public void wave(View v) {
+        switch (v.getId()) {
+            case R.id.plus_progress_btn://水位线上涨
                 currentProgress = currentProgress + 0.1f;
                 currentProgress = currentProgress > 1.0f ? 1.0f : currentProgress;
                 refresh();
-            }
-        });
-        findViewById(R.id.minus_progress_btn).setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
+                break;
+            case R.id.minus_progress_btn://水位线下降
                 currentProgress = currentProgress - 0.1f;
                 currentProgress = currentProgress < 0.1f ? 0.1f : currentProgress;
                 refresh();
-            }
-        });
-
-        findViewById(R.id.plus_period_btn).setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
+                break;
+            case R.id.plus_period_btn://周期增加
                 period += 0.25f;
                 period = period > 60f ? 60f : period;
                 refresh();
-            }
-        });
-
-        findViewById(R.id.minus_period_btn).setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
+                break;
+            case R.id.minus_period_btn://周期减少
                 period -= 0.25f;
                 period = period < 0.5f ? 0.5f : period;
                 refresh();
-            }
-        });
-
-        findViewById(R.id.plus_swing_btn).setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
+                break;
+            case R.id.plus_swing_btn://振幅增加
                 swing += 0.1f;
                 swing = swing > 1.0f ? 1.0f : swing;
                 refresh();
-            }
-        });
-
-        findViewById(R.id.minus_swing_btn).setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
+                break;
+            case R.id.minus_swing_btn://振幅减少
                 swing -= 0.1f;
                 swing = swing < 0.1f ? 0.1f : swing;
                 refresh();
-            }
-        });
-
-        findViewById(R.id.left_to_right_btn).setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
+                break;
+            case R.id.left_to_right_btn://波浪从左到右
                 direction = WaveModel.Direction.left2Right;
                 refresh();
-            }
-        });
-
-        findViewById(R.id.right_to_left_btn).setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
+                break;
+            case R.id.right_to_left_btn://波浪从右到左
                 direction = WaveModel.Direction.right2Left;
                 refresh();
-            }
-        });
-
-        findViewById(R.id.plus_cnt_btn).setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
+                break;
+            case R.id.plus_cnt_btn://波峰增加
                 cnt++;
                 cnt = cnt > 10 ? 10 : cnt;
                 refresh();
-            }
-        });
-
-        findViewById(R.id.minus_cnt_btn).setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
+                break;
+            case R.id.minus_cnt_btn://波峰减少
                 cnt--;
                 cnt = cnt < 2 ? 2 : cnt;
                 refresh();
-            }
-        });
-
-        findViewById(R.id.ring_btn).setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
+                break;
+            case R.id.ring_btn://圆形样式
                 mPercentWavePie.setShape(PercentWavePie.Shape.RING);
-            }
-        });
-        findViewById(R.id.square_btn).setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
+                break;
+            case R.id.square_btn://正方形样式
                 mPercentWavePie.setShape(PercentWavePie.Shape.SQUARE);
-            }
-        });
-        findViewById(R.id.round_square_btn).setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
+                break;
+            case R.id.round_square_btn://圆角正方形样式
                 mPercentWavePie.setShape(PercentWavePie.Shape.ROUND_SQUARE);
-            }
-        });
+                break;
+        }
     }
 
     private float currentProgress = 0.0f;
