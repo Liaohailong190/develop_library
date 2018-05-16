@@ -31,6 +31,7 @@ public class CustomViewActivity extends BaseActivity {
     private float swing = 0.15f;
     private WaveModel.Direction direction = WaveModel.Direction.left2Right;
     private int cnt = 2;
+    private boolean anim = true;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -56,6 +57,7 @@ public class CustomViewActivity extends BaseActivity {
             R.id.plus_swing_btn, R.id.minus_swing_btn,
             R.id.left_to_right_btn, R.id.right_to_left_btn,
             R.id.plus_cnt_btn, R.id.minus_cnt_btn,
+            R.id.anim_start_btn, R.id.anim_stop_btn,
             R.id.ring_btn, R.id.square_btn, R.id.round_square_btn})
     public void wave(View v) {
         switch (v.getId()) {
@@ -107,6 +109,14 @@ public class CustomViewActivity extends BaseActivity {
                 cnt = cnt < 2 ? 2 : cnt;
                 refresh();
                 break;
+            case R.id.anim_start_btn://动画开启
+                anim = true;
+                refresh();
+                break;
+            case R.id.anim_stop_btn://动画停止
+                anim = false;
+                refresh();
+                break;
             case R.id.ring_btn://圆形样式
                 mPercentWavePie.setShape(PercentWavePie.Shape.RING);
                 break;
@@ -139,13 +149,13 @@ public class CustomViewActivity extends BaseActivity {
         LinkedList<WaveModel> waveModelList = mPercentWavePie.getWaveModelList();
         if (waveModelList.isEmpty()) {
             LinkedList<WaveModel> data = new LinkedList<>();
-            WaveModel waveModel = new WaveModel(fillColor);
-            waveModel.setCnt(cnt);//波峰个数
-            waveModel.setSwing(swing);//振幅
-            waveModel.setPhase(90f);//初相
-            waveModel.setPeriod(period);//周期
-            waveModel.setOpacity(0.8f);//透明度
-            waveModel.setProgress(currentProgress);//进度
+            WaveModel waveModel = new WaveModel(fillColor)
+                    .setCnt(cnt)//波峰个数
+                    .setSwing(swing)//振幅
+                    .setPhase(90f)//初相
+                    .setPeriod(period)//周期
+                    .setOpacity(0.8f)//透明度
+                    .setProgress(currentProgress);//进度
             data.add(waveModel);
             mPercentWavePie.setWaveModelList(data);
         }
@@ -154,15 +164,15 @@ public class CustomViewActivity extends BaseActivity {
     private void refresh() {
         LinkedList<WaveModel> waveModelList = mPercentWavePie.getWaveModelList();
         if (!waveModelList.isEmpty()) {
-            WaveModel cache = waveModelList.get(0);
-            cache.setCnt(cnt);//波峰个数
-            cache.setSwing(swing);//振幅
-            cache.setPhase(90f);//初相
-            cache.setPeriod(period);//周期
-            cache.setOpacity(0.8f);//透明度
-            cache.setDirection(direction);
-            cache.initConfig();
-            cache.animToProgress(currentProgress);//进度
+            waveModelList.get(0).setCnt(cnt)//波峰个数
+                    .setSwing(swing)//振幅
+                    .setPhase(90f)//初相
+                    .setPeriod(period)//周期
+                    .setOpacity(0.8f)//透明度
+                    .setAnim(anim)//是否开启动画
+                    .setDirection(direction)//动画方向
+                    .animToProgress(currentProgress)//进度
+                    .notifyDataSetChanged();
         }
     }
 }

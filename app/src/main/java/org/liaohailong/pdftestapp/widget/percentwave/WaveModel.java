@@ -17,9 +17,6 @@ public class WaveModel {
     private static final int ANIM_DURATION = 4000;
     //波浪顺序，用来控制波浪的错位感觉
     private int index = 1;
-    //波浪颜色
-    @ColorInt
-    private int color;
     //波浪进度 (水位线高度) 取值[0.0f,1.0f] 默认0.05f
     private float progress = 0.05f;
     //绘制区域
@@ -86,25 +83,26 @@ public class WaveModel {
         this.index = index;
     }
 
-    public void setColor(@ColorInt int color) {
-        this.color = color;
+    public WaveModel setColor(@ColorInt int color) {
         paint.setColor(color);
+        return this;
     }
 
     /**
      * @param progress 取值范围 [0.0f,1.0f]
      */
-    public void setProgress(float progress) {
+    public WaveModel setProgress(float progress) {
         progress = progress < 0.0f ? 0.0f : progress;
         progress = progress > 1.0f ? 1.0f : progress;
         this.progress = 1.0f - progress;//反向处理水位线
+        return this;
     }
 
     float getProgress() {
         return Math.abs(progress - 1.0f);
     }
 
-    public void animToProgress(float progress) {
+    public WaveModel animToProgress(float progress) {
         if (progressAnim.isRunning()) {
             progressAnim.pause();
         }
@@ -115,53 +113,61 @@ public class WaveModel {
             progressAnim.setDuration((long) (offset * ANIM_DURATION));
             progressAnim.start();
         }
+        return this;
     }
 
     void setRect(int left, int top, int right, int bottom) {
         this.rect.set(left, top, right, bottom);
     }
 
-    public void setCnt(int cnt) {
+    public WaveModel setCnt(int cnt) {
         cnt = cnt < 2 ? 2 : cnt;
         cnt = cnt > 10 ? 10 : cnt;
         this.cnt = cnt;
+        return this;
     }
 
-    public void setSwing(float swing) {
+    public WaveModel setSwing(float swing) {
         swing = swing < 0.1f ? 0.1f : swing;
         swing = swing > 1.0f ? 1.0f : swing;
         this.swing = swing;
+        return this;
     }
 
-    public void setPhase(float phase) {
+    public WaveModel setPhase(float phase) {
         phase = phase < 0 ? 0 : phase;
         phase = phase > 360 ? 360 : phase;
         this.phase = phase;
+        return this;
     }
 
-    public void setPeriod(float period) {
+    public WaveModel setPeriod(float period) {
         period = period < 0.5f ? 0.5f : period;
         period = period > 60f ? 60f : period;
         this.period = period;
+        return this;
     }
 
-    public void setOpacity(float opacity) {
+    public WaveModel setOpacity(float opacity) {
         opacity = opacity < 0.0f ? 0.0f : opacity;
         opacity = opacity > 1.0f ? 1.0f : opacity;
         this.opacity = opacity;
         int alpha = Math.round(255f * opacity);
         paint.setAlpha(alpha);
+        return this;
     }
 
-    public void setAnim(boolean anim) {
+    public WaveModel setAnim(boolean anim) {
         this.anim = anim;
+        return this;
     }
 
-    public void setDirection(Direction direction) {
+    public WaveModel setDirection(Direction direction) {
         this.direction = direction;
+        return this;
     }
 
-    public void initConfig() {
+    public void notifyDataSetChanged() {
         width = rect.width();
         height = rect.height();
 
@@ -181,8 +187,6 @@ public class WaveModel {
         //设置动画偏移
         if (anim) {
             offset = direction == Direction.left2Right ? offset - factor : offset + factor;
-        } else {
-            offset = 0.0f;//不开启动画，还原初相
         }
 
         /*
@@ -197,7 +201,15 @@ public class WaveModel {
         float initialPhase = (float) (offsetAngle * Math.PI / 180f);//初相
         for (int i = 0; i < width; i++) {
             float radians = i * frequency + initialPhase;//运动角度
-            float sin = (float) (amplitude * Math.sin(radians) + 0.125f * (1.0f - progress));
+            float sin = (float) (amplitude * Math.sin(radians)
+                    + 0.125f * (1.0f - progress));
+            /*
+            * ↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑
+            * + 0.125f * (1.0f - progress))这段是对波浪进行偏移量的修正，
+            * 确保波浪在0%的时候有一点点波峰，看得见波动的感觉。
+            * 确保波浪在100%的时候也有一点点波谷，看得见波动的感觉。
+            * 以上判断是参考DataV的水纹波浪图产生的，仅是大概相似，非绝对相似。
+            * */
             float sinY = sin + progress;
             float y = sinY * height;
             path.lineTo(i, y);

@@ -180,7 +180,7 @@ public class PercentWavePie extends View {
                 int leftAndTop = (int) (mBorderWidth + mSpace);
                 int rightAndBottom = (int) (mRadius * 2f - leftAndTop);
                 waveModel.setRect(0, 0, rightAndBottom, rightAndBottom);
-                waveModel.initConfig();
+                waveModel.notifyDataSetChanged();
             }
         }
     }
@@ -232,7 +232,7 @@ public class PercentWavePie extends View {
         }
         //默认间距与环线厚度一致
         if (mSpace <= 0) {
-            mSpace = mBorderWidth;
+            setSpace(mBorderWidth);
         }
         //重置波纹绘制范围
         initWave();
