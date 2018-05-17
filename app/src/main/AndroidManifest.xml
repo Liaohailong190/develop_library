@@ -31,7 +31,17 @@
         <activity android:name=".activity.OtherActivity" />
         <activity android:name=".activity.GLActivity" />
         <activity
-            android:name=".activity.CustomViewActivity"
+            android:name=".activity.PercentWavePieActivity"
+            android:hardwareAccelerated="true"
+            android:screenOrientation="sensorLandscape">
+            <!--<intent-filter>-->
+            <!--<action android:name="android.intent.action.MAIN" />-->
+
+            <!--<category android:name="android.intent.category.LAUNCHER" />-->
+            <!--</intent-filter>-->
+        </activity>
+        <activity
+            android:name=".activity.RatioImagesViewActivity"
             android:hardwareAccelerated="true"
             android:screenOrientation="sensorLandscape">
             <intent-filter>

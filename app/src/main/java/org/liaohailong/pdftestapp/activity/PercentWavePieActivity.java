@@ -16,13 +16,13 @@ import org.liaohailong.pdftestapp.widget.percentwave.WaveModel;
 import java.util.LinkedList;
 
 /**
- * Describe as: 展示自定义视图的界面
- * Created by LiaoHaiLong on 2018/5/14.
+ * Describe as: DataV多值波浪饼图
+ * Created by LHL on 2018/5/14.
  */
 
-public class CustomViewActivity extends BaseActivity {
+public class PercentWavePieActivity extends BaseActivity {
     public static void show(Context context) {
-        Intent intent = new Intent(context, CustomViewActivity.class);
+        Intent intent = new Intent(context, PercentWavePieActivity.class);
         context.startActivity(intent);
     }
 
@@ -38,7 +38,7 @@ public class CustomViewActivity extends BaseActivity {
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_custom_view);
+        setContentView(R.layout.activity_percent_wave);
         mPercentWavePie = findViewById(R.id.wave_view);
         int fillColor = Color.parseColor("#294D99");
         mPercentWavePie.setBorderColor(fillColor);//设置填充颜色（边界线的颜色）

@@ -34,7 +34,7 @@ public class OtherActivity extends BaseActivity {
                 GLActivity.show(v.getContext());
                 break;
             case R.id.custom_view_btn:
-                CustomViewActivity.show(v.getContext());
+                PercentWavePieActivity.show(v.getContext());
                 break;
         }
     }
