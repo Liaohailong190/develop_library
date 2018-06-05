@@ -179,13 +179,13 @@ public class SingleChooseTabView extends LinearLayout implements View.OnClickLis
             indexOffset = indexOffset > maxOffset ? maxOffset : indexOffset;
         }
         //绘制数据内容
-        for (int i = 0; i < childCount; i++) {
-            TextView view = (TextView) getChildAt(i);
-            int dataIndex = i + indexOffset;
-            TabEntry tabEntry = getData().get(dataIndex);
+        int j = 0;
+        for (int i = indexOffset; i < indexOffset + childCount; i++) {
+            TextView view = (TextView) getChildAt(j);
+            TabEntry tabEntry = getData().get(i);
             bindView(view, tabEntry);
+            j++;
         }
-
     }
 
     private void bindView(TextView textView, TabEntry tabEntry) {
