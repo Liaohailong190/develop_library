@@ -14,6 +14,7 @@ import android.util.AttributeSet;
 import android.util.TypedValue;
 import android.view.Gravity;
 import android.view.LayoutInflater;
+import android.view.View;
 import android.view.ViewGroup;
 import android.widget.LinearLayout;
 import android.widget.TextView;
@@ -28,7 +29,7 @@ import java.util.List;
  * Created by LHL on 2018/6/5.
  */
 
-public class SingleChooseTabView extends LinearLayout {
+public class SingleChooseTabView extends LinearLayout implements View.OnClickListener {
 
     private Path clipPath = new Path();
     private RectF rectF = new RectF();
@@ -234,6 +235,23 @@ public class SingleChooseTabView extends LinearLayout {
         else {
             textView.setTextColor(textColor);
             textView.setBackgroundColor(Color.TRANSPARENT);
+        }
+
+        //点击事件把控
+        textView.setOnClickListener(this);
+        textView.setTag(tabEntry);
+    }
+
+    @Override
+    public void onClick(View v) {
+        Object tabEntry = v.getTag();
+        if (tabEntry instanceof TabEntry) {
+            selectIndex = tabEntries.indexOf(tabEntry);
+            //刷新tab数据
+            refreshTab();
+            //继续开始轮播
+            removeCallbacks(autoRunnable);
+            postDelayed(autoRunnable, autoDuration);
         }
     }
 
