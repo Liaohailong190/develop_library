@@ -13,6 +13,11 @@ android {
         versionName "1.0"
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
     }
+    //Android Studio Version:3.1.2 使用ndk会去查找ndk-bundle中未下载的文件
+    packagingOptions {
+        doNotStrip '*/mips/*.so'
+        doNotStrip '*/mips64/*.so'
+    }
     buildTypes {
         release {
             minifyEnabled false

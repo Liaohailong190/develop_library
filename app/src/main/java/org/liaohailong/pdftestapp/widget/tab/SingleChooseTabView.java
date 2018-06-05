@@ -138,6 +138,12 @@ public class SingleChooseTabView extends LinearLayout implements View.OnClickLis
         boolean lessData = dataCount <= planCount;//萝卜数据少于坑数
         int newCount = lessData ? dataCount : planCount;//如果萝卜数据量少于行数的情况下，就按萝卜数据来
         resizeChildrenCount(this, newCount, R.layout.layout_simple_text);
+        //初始化视图与数据的绑定
+        for (int i = 0; i < newCount; i++) {
+            View view = getChildAt(i);
+            TabEntry data = tabEntries.get(i);
+            view.setTag(data);
+        }
         //刷新tab数据
         removeCallbacks(autoRunnable);
         post(autoRunnable);
@@ -170,13 +176,29 @@ public class SingleChooseTabView extends LinearLayout implements View.OnClickLis
         //是否轮播到"翻页位置",当数据数量大于设置展示列数时生效
         boolean carousel = dataCount > childCount;//是否具有轮播条件
         if (carousel) {
-            //轮播条目走到倒数第二个时
-            if (selectIndex >= lastViewIndex) {
+            View firstVisibleView = getChildAt(0);//第一个能看见的数据
+            View lastVisibleView = getChildAt(lastViewIndex);//最后一个能看见的数据
+            TabEntry firstVisibleTabEntry = (TabEntry) firstVisibleView.getTag();
+            TabEntry lastVisibleTabEntry = (TabEntry) lastVisibleView.getTag();
+            int firstIndex = tabEntries.indexOf(firstVisibleTabEntry);
+            int lastIndex = tabEntries.indexOf(lastVisibleTabEntry);
+            //轮播条目超过倒数第一个时
+            if (selectIndex > lastIndex - 1) {
                 indexOffset = selectIndex - lastViewIndex + 1;
             }
-            //是否轮播tab的最后一条数据已经可以看到了，就可固定住indexOffset
+            //轮播条目前置第一个时
+            else if (selectIndex < firstIndex + 1) {
+                indexOffset = selectIndex - 1;
+            }
+            //偏移位保持不变
+            else {
+                indexOffset = firstIndex;
+            }
+            //防止偏移过程中下标越界
             int maxOffset = lastDataIndex - lastViewIndex;
+            int minOffset = 0;
             indexOffset = indexOffset > maxOffset ? maxOffset : indexOffset;
+            indexOffset = indexOffset < minOffset ? minOffset : indexOffset;
         }
         //绘制数据内容
         int j = 0;
@@ -246,12 +268,15 @@ public class SingleChooseTabView extends LinearLayout implements View.OnClickLis
     public void onClick(View v) {
         Object tabEntry = v.getTag();
         if (tabEntry instanceof TabEntry) {
+            //确认点击条目下标
             selectIndex = tabEntries.indexOf(tabEntry);
             //刷新tab数据
             refreshTab();
             //继续开始轮播
             removeCallbacks(autoRunnable);
-            postDelayed(autoRunnable, autoDuration);
+            if (isAuto()) {
+                postDelayed(autoRunnable, autoDuration);
+            }
         }
     }
 

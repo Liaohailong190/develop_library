@@ -31,8 +31,10 @@ public class SingleChooseTabActivity extends BaseActivity {
                 .setAutoDuration(1000)
                 .setTabDirection(LinearLayout.HORIZONTAL)
                 .setBackColor(Color.LTGRAY)
-                .setRawCount(5)
+                .setRawCount(2)
                 .setRadius(15);
+        //TODO 当展示数量<3 && 数据返回数量 >=3 的时候有逻辑漏洞---->高亮位于第二个的时候，如何把第三位的tab展示出来？
+        //TODO 上面的问题其实我的代码解决了，但是需要探讨是否统一我的方案！！！
         List<TabEntry> data = new ArrayList<>();
         for (int i = 1; i <= 10; i++) {
             TabEntry tabEntry = new TabEntry();
