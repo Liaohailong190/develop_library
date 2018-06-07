@@ -3,6 +3,7 @@ package org.liaohailong.pdftestapp.widget.tab;
 import android.content.Context;
 import android.graphics.Canvas;
 import android.graphics.Color;
+import android.graphics.Paint;
 import android.graphics.Path;
 import android.graphics.RectF;
 import android.graphics.Typeface;
@@ -31,8 +32,9 @@ import java.util.List;
 
 public class SingleChooseTabView extends LinearLayout implements View.OnClickListener {
 
-    private Path clipPath = new Path();
+    private Path borderPath = new Path();
     private RectF rectF = new RectF();
+    private Paint borderPaint = new Paint();
     private ArrayList<TabEntry> tabEntries = new ArrayList<>();
 
     //默认配置样式
@@ -45,7 +47,7 @@ public class SingleChooseTabView extends LinearLayout implements View.OnClickLis
     private boolean showBorder;//是否展示边界，默认隐藏
     private float borderWidth;//边界线的厚度
     @ColorInt
-    private int borderColor;//边界颜色
+    private int borderColor = Color.TRANSPARENT;//边界颜色
 
     private boolean isAuto;//是否轮播 默认启用
     private long autoDuration = 30 * 1000;//轮播间隔时间，默认30s
@@ -137,7 +139,7 @@ public class SingleChooseTabView extends LinearLayout implements View.OnClickLis
         int dataCount = tabEntries.size();//实际萝卜数量
         boolean lessData = dataCount <= planCount;//萝卜数据少于坑数
         int newCount = lessData ? dataCount : planCount;//如果萝卜数据量少于行数的情况下，就按萝卜数据来
-        resizeChildrenCount(this, newCount, R.layout.layout_simple_text);
+        resizeChildrenCount(this, newCount, R.layout.layout_simple_text);//重置容器子视图个数（重置坑位数量）
         //初始化视图与数据的绑定
         for (int i = 0; i < newCount; i++) {
             View view = getChildAt(i);
@@ -201,10 +203,11 @@ public class SingleChooseTabView extends LinearLayout implements View.OnClickLis
             indexOffset = indexOffset < minOffset ? minOffset : indexOffset;
         }
         //绘制数据内容
-        int j = 0;
+        int j = 0;//子视图的下标位置
         for (int i = indexOffset; i < indexOffset + childCount; i++) {
             TextView view = (TextView) getChildAt(j);
             TabEntry tabEntry = getData().get(i);
+            //将数据绑定到视图上
             bindView(view, tabEntry);
             j++;
         }
@@ -218,8 +221,8 @@ public class SingleChooseTabView extends LinearLayout implements View.OnClickLis
         int selectedTextColor = tabEntry.getSelectedTextColor();//选中时的字体颜色
         int selectedBackColor = tabEntry.getSelectedBackColor();//选中时的字体背景
 
-        //潜配置 与Web端(李煜)口头协商
-        int defaultPadding = (int) Math.ceil(textSize);
+        //潜配置 与Web端一致
+        int defaultPadding = (int) Math.ceil(textSize);//字体大小进一法
         textView.setPadding(defaultPadding, 0, defaultPadding, 0);//默认文本左右间隙
         textView.setMaxLines(2);//最多两行
         textView.setEllipsize(TextUtils.TruncateAt.END);//末端展示...
@@ -248,15 +251,23 @@ public class SingleChooseTabView extends LinearLayout implements View.OnClickLis
 
         //是否需要高亮
         int targetIndex = getData().indexOf(tabEntry);
-        //命中高亮
-        if (targetIndex == selectIndex) {
+        //非单个坑
+        if (getChildCount() > 1) {
+            //命中高亮
+            if (targetIndex == selectIndex) {
+                textView.setTextColor(selectedTextColor);
+                textView.setBackgroundColor(selectedBackColor);
+            }
+            //非高亮
+            else {
+                textView.setTextColor(textColor);
+                textView.setBackgroundColor(Color.TRANSPARENT);
+            }
+        }
+        //单个坑的时候，不用考虑，都是高亮展示
+        else {
             textView.setTextColor(selectedTextColor);
             textView.setBackgroundColor(selectedBackColor);
-        }
-        //非高亮
-        else {
-            textView.setTextColor(textColor);
-            textView.setBackgroundColor(Color.TRANSPARENT);
         }
 
         //点击事件把控
@@ -266,6 +277,10 @@ public class SingleChooseTabView extends LinearLayout implements View.OnClickLis
 
     @Override
     public void onClick(View v) {
+        //如果坑位少于两个就不点击无效了
+        if (rawCount < 2 || tabEntries.size() < 2) {
+            return;
+        }
         Object tabEntry = v.getTag();
         if (tabEntry instanceof TabEntry) {
             //确认点击条目下标
@@ -293,17 +308,35 @@ public class SingleChooseTabView extends LinearLayout implements View.OnClickLis
 
     @Override
     public void draw(Canvas canvas) {
-        //裁剪圆角区域
         int measuredWidth = getWidth();
         int measuredHeight = getHeight();
         if (measuredWidth <= 0 || measuredHeight <= 0) {
             return;
         }
-        clipPath.reset();
+        //裁剪圆角区域
+        borderPath.reset();
         rectF.setEmpty();
         rectF.set(0, 0, measuredWidth, measuredHeight);
-        clipPath.addRoundRect(rectF, radius, radius, Path.Direction.CW);
-        canvas.clipPath(clipPath);
+        borderPath.addRoundRect(rectF, radius, radius, Path.Direction.CW);
+        canvas.clipPath(borderPath);
         super.draw(canvas);
+    }
+
+    @Override
+    protected void dispatchDraw(Canvas canvas) {
+        super.dispatchDraw(canvas);
+        int measuredWidth = getWidth();
+        int measuredHeight = getHeight();
+        if (measuredWidth <= 0 || measuredHeight <= 0) {
+            return;
+        }
+        //绘制边界
+        if (showBorder && borderWidth > 0.000000001) {
+            borderPaint.setStyle(Paint.Style.STROKE);
+            borderPaint.setAntiAlias(true);
+            borderPaint.setColor(borderColor);
+            borderPaint.setStrokeWidth(borderWidth);
+            canvas.drawPath(borderPath, borderPaint);
+        }
     }
 }
