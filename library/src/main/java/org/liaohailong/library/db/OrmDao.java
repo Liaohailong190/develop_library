@@ -22,7 +22,7 @@ import java.util.Set;
 public class OrmDao<T> implements JsonInterface {
     private Dao daoOpe;
 
-    public OrmDao(Class clz) {
+    OrmDao(Class clz) {
         try {
             OrmLiteDbHelper helper = OrmLiteDbHelper.getHelper(RootApplication.getInstance().getApplicationContext());
             daoOpe = helper.getDao(clz);
@@ -80,9 +80,6 @@ public class OrmDao<T> implements JsonInterface {
 
     /**
      * 如果有，先删除，再增加
-     *
-     * @param
-     * @return
      */
     public int replace(List<T> list) {
         int result = 0;
