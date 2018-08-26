@@ -535,7 +535,7 @@ public class TransItemAnimator extends SimpleItemAnimator {
      * pending/running, call {@link #dispatchAnimationsFinished()} to notify any
      * listeners.
      */
-    void dispatchFinishedWhenDone() {
+    private void dispatchFinishedWhenDone() {
         if (!isRunning()) {
             dispatchAnimationsFinished();
         }

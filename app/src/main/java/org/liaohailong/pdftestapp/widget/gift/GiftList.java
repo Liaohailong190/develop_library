@@ -33,5 +33,11 @@ public class GiftList extends RecyclerView {
         //设置Item动画
         TransItemAnimator transItemAnimator = new TransItemAnimator();
         setItemAnimator(transItemAnimator);
+        transItemAnimator.isRunning(new ItemAnimator.ItemAnimatorFinishedListener() {
+            @Override
+            public void onAnimationsFinished() {
+                //do something...
+            }
+        });
     }
 }
