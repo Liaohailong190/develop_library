@@ -27,7 +27,7 @@ public class OtherActivity extends BaseActivity {
         setContentView(R.layout.activity_other);
     }
 
-    @OnClick({R.id.gl_btn, R.id.custom_view_btn})
+    @OnClick({R.id.gl_btn, R.id.custom_view_btn, R.id.gift_list_btn})
     public void jump(View v) {
         switch (v.getId()) {
             case R.id.gl_btn:
@@ -35,6 +35,9 @@ public class OtherActivity extends BaseActivity {
                 break;
             case R.id.custom_view_btn:
                 PercentWavePieActivity.show(v.getContext());
+                break;
+            case R.id.gift_list_btn:
+                GiftListActivity.show(v.getContext());
                 break;
         }
     }

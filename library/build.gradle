@@ -2,13 +2,13 @@ apply plugin: 'com.android.library'
 apply plugin: 'kotlin-android'
 
 android {
-    compileSdkVersion 26
-    buildToolsVersion "26.0.2"
+    compileSdkVersion 27
+    buildToolsVersion "27.0.3"
 
     defaultConfig {
         minSdkVersion 19
         //noinspection OldTargetApi
-        targetSdkVersion 26
+        targetSdkVersion 27
         versionCode 1
         versionName "1.0"
 
@@ -28,18 +28,18 @@ dependencies {
     androidTestCompile('com.android.support.test.espresso:espresso-core:2.2.2', {
         exclude group: 'com.android.support', module: 'support-annotations'
     })
-    compile 'com.android.support:appcompat-v7:26.1.0'
+    compile 'com.android.support:appcompat-v7:27.1.1'
     testCompile 'junit:junit:4.12'
     //gson解析
-    compile 'com.google.code.gson:gson:2.8.0'
+    compile 'com.google.code.gson:gson:2.8.2'
     // ormlite, ORM工具
     compile files('libs/ormlite-core-5.0.jar')
     compile files('libs/ormlite-android-5.0.jar')
     compile files('libs/android-query-full.0.26.7.jar')
     //列表
-    compile 'com.android.support:recyclerview-v7:26.1.0'
+    compile 'com.android.support:recyclerview-v7:27.1.1'
     //请求网络相关
-    compile 'com.squareup.okhttp3:okhttp:3.10.0'
+    compile 'com.squareup.okhttp3:okhttp:3.11.0'
     compile 'com.squareup.okio:okio:1.14.0'
     compile "org.jetbrains.kotlin:kotlin-stdlib-jre7:$kotlin_version"
 }
