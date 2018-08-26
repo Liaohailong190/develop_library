@@ -52,7 +52,7 @@ public class TransItemAnimator extends SimpleItemAnimator {
 
     private static class ChangeInfo {
         public RecyclerView.ViewHolder oldHolder, newHolder;
-        public int fromX, fromY, toX, toY;
+        private int fromX, fromY, toX, toY;
 
         private ChangeInfo(RecyclerView.ViewHolder oldHolder, RecyclerView.ViewHolder newHolder) {
             this.oldHolder = oldHolder;
@@ -98,8 +98,7 @@ public class TransItemAnimator extends SimpleItemAnimator {
         mPendingRemovals.clear();
         // Next, move stuff
         if (movesPending) {
-            final ArrayList<MoveInfo> moves = new ArrayList<>();
-            moves.addAll(mPendingMoves);
+            final ArrayList<MoveInfo> moves = new ArrayList<>(mPendingMoves);
             mMovesList.add(moves);
             mPendingMoves.clear();
             Runnable mover = new Runnable() {
@@ -122,8 +121,7 @@ public class TransItemAnimator extends SimpleItemAnimator {
         }
         // Next, change stuff, to run in parallel with move animations
         if (changesPending) {
-            final ArrayList<ChangeInfo> changes = new ArrayList<>();
-            changes.addAll(mPendingChanges);
+            final ArrayList<ChangeInfo> changes = new ArrayList<>(mPendingChanges);
             mChangesList.add(changes);
             mPendingChanges.clear();
             Runnable changer = new Runnable() {
@@ -145,8 +143,7 @@ public class TransItemAnimator extends SimpleItemAnimator {
         }
         // Next, add stuff
         if (additionsPending) {
-            final ArrayList<RecyclerView.ViewHolder> additions = new ArrayList<>();
-            additions.addAll(mPendingAdditions);
+            final ArrayList<RecyclerView.ViewHolder> additions = new ArrayList<>(mPendingAdditions);
             mAdditionsList.add(additions);
             mPendingAdditions.clear();
             Runnable adder = new Runnable() {
@@ -261,7 +258,7 @@ public class TransItemAnimator extends SimpleItemAnimator {
         return true;
     }
 
-    void animateMoveImpl(final RecyclerView.ViewHolder holder, int fromX, int fromY, int toX, int toY) {
+    private void animateMoveImpl(final RecyclerView.ViewHolder holder, int fromX, int fromY, int toX, int toY) {
         final View view = holder.itemView;
         final int deltaX = toX - fromX;
         final int deltaY = toY - fromY;
@@ -331,7 +328,7 @@ public class TransItemAnimator extends SimpleItemAnimator {
         return true;
     }
 
-    void animateChangeImpl(final ChangeInfo changeInfo) {
+    private void animateChangeImpl(final ChangeInfo changeInfo) {
         final RecyclerView.ViewHolder holder = changeInfo.oldHolder;
         final View view = holder == null ? null : holder.itemView;
         final RecyclerView.ViewHolder newHolder = changeInfo.newHolder;
@@ -626,7 +623,7 @@ public class TransItemAnimator extends SimpleItemAnimator {
         dispatchAnimationsFinished();
     }
 
-    void cancelAll(List<RecyclerView.ViewHolder> viewHolders) {
+    private void cancelAll(List<RecyclerView.ViewHolder> viewHolders) {
         for (int i = viewHolders.size() - 1; i >= 0; i--) {
             viewHolders.get(i).itemView.animate().cancel();
         }
