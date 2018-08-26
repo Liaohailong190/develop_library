@@ -2,8 +2,10 @@ package org.liaohailong.pdftestapp.activity;
 
 import android.graphics.Color;
 import android.os.Bundle;
+import android.view.View;
 import android.widget.LinearLayout;
 
+import org.liaohailong.library.inject.OnClick;
 import org.liaohailong.pdftestapp.BaseActivity;
 import org.liaohailong.pdftestapp.R;
 import org.liaohailong.pdftestapp.widget.tab.SingleChooseTabView;
@@ -21,24 +23,31 @@ public class SingleChooseTabActivity extends BaseActivity {
 
     private SingleChooseTabView tabView;
 
+    private int rawCount = 1;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_single_choos_tab);
 
         tabView = findViewById(R.id.tab_view);
+        refresh();
+    }
+
+    private void refresh() {
         tabView.setAuto(true)
                 .setAutoDuration(1000)
                 .setTabDirection(LinearLayout.HORIZONTAL)
                 .setBackColor(Color.LTGRAY)
-                .setRawCount(2)
+                .setShowBorder(true)
+                .setBorderColor(Color.BLUE)
+                .setBorderWidth(10)
+                .setRawCount(rawCount)
                 .setRadius(15);
-        //TODO 当展示数量<3 && 数据返回数量 >=3 的时候有逻辑漏洞---->高亮位于第二个的时候，如何把第三位的tab展示出来？
-        //TODO 上面的问题其实我的代码解决了，但是需要探讨是否统一我的方案！！！
         List<TabEntry> data = new ArrayList<>();
         for (int i = 1; i <= 10; i++) {
             TabEntry tabEntry = new TabEntry();
-            tabEntry.setTextSize(16 * 3);
+            tabEntry.setTextSize(14 * 3);
             tabEntry.setTextColor(Color.WHITE);
             tabEntry.setTextBold(true);
             tabEntry.setSelectedBackColor(Color.RED);
@@ -54,5 +63,20 @@ public class SingleChooseTabActivity extends BaseActivity {
                 tabView.notifyDataSetChanged();
             }
         }, 2000);
+    }
+
+    @OnClick({R.id.add_btn, R.id.remove_btn})
+    public void changed(View view) {
+        switch (view.getId()) {
+            case R.id.add_btn://添加一个tab
+                rawCount++;
+                break;
+            case R.id.remove_btn://移除一个tab
+                rawCount--;
+                break;
+        }
+        rawCount = rawCount > 10 ? 10 : rawCount;
+        rawCount = rawCount < 1 ? 1 : rawCount;
+        refresh();
     }
 }

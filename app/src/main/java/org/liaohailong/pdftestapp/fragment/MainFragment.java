@@ -14,7 +14,7 @@ import org.liaohailong.library.async.Async;
 import org.liaohailong.library.async.Cat;
 import org.liaohailong.library.async.Mouse;
 import org.liaohailong.library.async.Schedulers;
-import org.liaohailong.library.db.Orm;
+import org.liaohailong.library.db.SQLite;
 import org.liaohailong.library.db.OrmDao;
 import org.liaohailong.library.http.Http;
 import org.liaohailong.library.http.HttpCallback;
@@ -113,7 +113,7 @@ public class MainFragment extends BaseFragment {
                     });
         }
 
-        OrmDao<Student> dao = Orm.create(Student.class);
+        OrmDao<Student> dao = SQLite.create(Student.class);
         dao.save(new Student("小明", 1, 18));
         dao.save(new Student("小红", 0, 17));
         dao.save(new Student("小芳", 0, 16));
