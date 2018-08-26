@@ -13,7 +13,7 @@ import android.widget.TextView;
 
 import org.liaohailong.pdftestapp.BaseActivity;
 import org.liaohailong.pdftestapp.R;
-import org.liaohailong.pdftestapp.widget.GiftList;
+import org.liaohailong.pdftestapp.widget.gift.GiftList;
 
 import java.util.LinkedList;
 
@@ -34,7 +34,6 @@ public class GiftListActivity extends BaseActivity implements View.OnClickListen
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_gift_list);
         GiftList giftList = findViewById(R.id.gift_list);
-
         findViewById(R.id.add_btn).setOnClickListener(this);
         findViewById(R.id.remove_btn).setOnClickListener(this);
         adapter = new Adapter(giftList);
@@ -55,7 +54,6 @@ public class GiftListActivity extends BaseActivity implements View.OnClickListen
                 break;
         }
     }
-
 
     private final class Adapter extends RecyclerView.Adapter<ViewHolder> {
         private final GiftList giftList;

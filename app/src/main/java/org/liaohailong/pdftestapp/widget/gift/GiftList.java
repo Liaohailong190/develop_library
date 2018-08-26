@@ -1,4 +1,4 @@
-package org.liaohailong.pdftestapp.widget;
+package org.liaohailong.pdftestapp.widget.gift;
 
 import android.content.Context;
 import android.support.annotation.Nullable;
@@ -25,10 +25,13 @@ public class GiftList extends RecyclerView {
     }
 
     private void init(Context context) {
+        //设置布局样式
         LinearLayoutManager linearLayoutManager = new LinearLayoutManager(context);
         linearLayoutManager.setOrientation(VERTICAL);
         linearLayoutManager.setReverseLayout(true);
         setLayoutManager(linearLayoutManager);
+        //设置Item动画
+        TransItemAnimator transItemAnimator = new TransItemAnimator();
+        setItemAnimator(transItemAnimator);
     }
-
 }
