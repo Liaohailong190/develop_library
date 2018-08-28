@@ -20,6 +20,7 @@ import java.io.FileOutputStream;
 import java.io.FilenameFilter;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InterruptedIOException;
 import java.nio.channels.FileChannel;
 import java.util.ArrayList;
 import java.util.List;
@@ -666,6 +667,33 @@ public class FileUtil {
             Utility.close(is);
         }
         return null;
+    }
+
+    public static byte[] fileToByte(File file) {
+        FileInputStream fis = null;
+        try {
+            fis = new FileInputStream(file);
+            return inputStreamToData(fis);
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            Utility.close(fis);
+        }
+        return null;
+    }
+
+    private static byte[] inputStreamToData(InputStream inputStream) throws IOException {
+        ByteArrayOutputStream cache = new ByteArrayOutputStream();
+        int ch;
+        byte[] buf = new byte[BUFF_SIZE];
+        while ((ch = inputStream.read(buf)) != -1) {
+            // 这些IO操作都无视Thread的interrupt（不产生IOException），所以还是自己来吧
+            if (Thread.interrupted()) {
+                throw new InterruptedIOException("task cancel");
+            }
+            cache.write(buf, 0, ch);
+        }
+        return cache.toByteArray();
     }
 }
 
