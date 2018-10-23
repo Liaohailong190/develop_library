@@ -122,6 +122,7 @@ public class AvatarImageView extends android.support.v7.widget.AppCompatImageVie
         if (drawBitmap == null || drawBitmap.isRecycled()) {
             return;
         }
+        drawBitmap.eraseColor(Color.TRANSPARENT);
         drawBitmap(drawCanvas);
         canvas.drawBitmap(drawBitmap, 0, 0, null);
     }
@@ -224,7 +225,7 @@ public class AvatarImageView extends android.support.v7.widget.AppCompatImageVie
                 drawRectF.top = rectF.top + offset;
                 drawRectF.right = rectF.right - offset;
                 drawRectF.bottom = rectF.bottom - offset;
-                float r = rxy - offset;
+                float r = rxy - offset * 2f;
                 canvas.drawRoundRect(drawRectF, r, r, paint);
                 break;
         }
