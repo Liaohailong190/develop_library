@@ -22,7 +22,7 @@ import org.liaohailong.pdftestapp.R;
  * Describe as: 头像样式的ImageView
  * Created by LHL on 2018/10/22.
  */
-public class AvatarImageView extends android.support.v7.widget.AppCompatImageView{
+public class AvatarImageView extends android.support.v7.widget.AppCompatImageView {
     public static final int CIRCLE = 0;
     public static final int ROUND_RECT = 1;
     private float rxy;
@@ -40,6 +40,9 @@ public class AvatarImageView extends android.support.v7.widget.AppCompatImageVie
     private Bitmap inBitmap;
     private Canvas inCanvas;
     private PorterDuffXfermode porterDuffXfermode = new PorterDuffXfermode(PorterDuff.Mode.SRC_IN);
+    //规避硬件加速
+    private Bitmap drawBitmap;
+    private Canvas drawCanvas;
 
     public AvatarImageView(Context context) {
         this(context, null);
@@ -77,7 +80,6 @@ public class AvatarImageView extends android.support.v7.widget.AppCompatImageVie
         bitmapPaint.setStrokeWidth(0f);
 
         imageMatrix = new Matrix();
-        setLayerType(LAYER_TYPE_SOFTWARE, null);
     }
 
     @Override
@@ -90,6 +92,14 @@ public class AvatarImageView extends android.support.v7.widget.AppCompatImageVie
         rectF.top = 0;
         rectF.right = w;
         rectF.bottom = h;
+        //规避createBitmap失败
+        w = w <= 0 ? 1 : w;
+        h = h <= 0 ? 1 : h;
+        if (drawBitmap != null) {
+            drawBitmap.recycle();
+        }
+        drawBitmap = Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888);
+        drawCanvas = new Canvas(drawBitmap);
     }
 
     public void setType(int type) {
@@ -109,6 +119,14 @@ public class AvatarImageView extends android.support.v7.widget.AppCompatImageVie
 
     @Override
     protected void onDraw(Canvas canvas) {
+        if (drawBitmap == null || drawBitmap.isRecycled()) {
+            return;
+        }
+        drawBitmap(drawCanvas);
+        canvas.drawBitmap(drawBitmap, 0, 0, null);
+    }
+
+    private void drawBitmap(Canvas canvas) {
         if (getMeasuredWidth() <= 0 || getMeasuredHeight() <= 0) {
             return;
         }
