@@ -9,6 +9,7 @@ import android.graphics.Matrix;
 import android.graphics.Paint;
 import android.graphics.PorterDuff;
 import android.graphics.PorterDuffXfermode;
+import android.graphics.Rect;
 import android.graphics.RectF;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
@@ -108,6 +109,9 @@ public class AvatarImageView extends android.support.v7.widget.AppCompatImageVie
 
     @Override
     protected void onDraw(Canvas canvas) {
+        if (getMeasuredWidth() <= 0 || getMeasuredHeight() <= 0) {
+            return;
+        }
         Drawable drawable = getDrawable();
         if (drawable == null) {
             return; // couldn't resolve the URI
@@ -135,6 +139,14 @@ public class AvatarImageView extends android.support.v7.widget.AppCompatImageVie
             if (inBitmap == null) {
                 int intrinsicWidth = drawable.getIntrinsicWidth();
                 int intrinsicHeight = drawable.getIntrinsicHeight();
+
+                Rect bounds = drawable.getBounds();
+                intrinsicWidth = intrinsicWidth <= 0 ? bounds.width() : intrinsicWidth;
+                intrinsicHeight = intrinsicHeight <= 0 ? bounds.height() : intrinsicHeight;
+
+                intrinsicWidth = intrinsicWidth <= 0 ? getMeasuredWidth() : intrinsicWidth;
+                intrinsicHeight = intrinsicHeight <= 0 ? getMeasuredHeight() : intrinsicHeight;
+
                 inBitmap = Bitmap.createBitmap(intrinsicWidth, intrinsicHeight, Bitmap.Config.ARGB_8888);
                 inCanvas = new Canvas(inBitmap);
             }
