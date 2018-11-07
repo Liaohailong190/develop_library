@@ -154,6 +154,9 @@ public class AvatarImageView extends android.support.v7.widget.AppCompatImageVie
         if (drawable instanceof BitmapDrawable) {
             BitmapDrawable bitmapDrawable = (BitmapDrawable) drawable;
             drawBitmap = bitmapDrawable.getBitmap();
+            if (drawBitmap == null) {
+                return;
+            }
         } else {
             if (inBitmap == null) {
                 int intrinsicWidth = drawable.getIntrinsicWidth();
@@ -173,7 +176,6 @@ public class AvatarImageView extends android.support.v7.widget.AppCompatImageVie
             drawable.draw(inCanvas);
             drawBitmap = inBitmap;
         }
-
         imageMatrix.reset();
         int measuredWidth = getMeasuredWidth();
         int measuredHeight = getMeasuredHeight();
