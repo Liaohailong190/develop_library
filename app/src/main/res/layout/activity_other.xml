@@ -21,4 +21,9 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="跳转GiftListActivity" />
+    <Button
+        android:id="@+id/exo_player_btn"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="跳转ExoPlayerActivity" />
 </LinearLayout>
